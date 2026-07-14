@@ -234,31 +234,31 @@ export default function TodayPage() {
 
   return (
     <div className="space-y-6">
-      <section className="animate-rise panel relative overflow-hidden p-6">
+      <section className="animate-rise panel relative overflow-hidden p-5 md:p-6">
         <div
-          className="pointer-events-none absolute inset-0 opacity-40"
+          className="pointer-events-none absolute inset-0 opacity-50"
           style={{
             backgroundImage:
-              "radial-gradient(circle at 20% 20%, rgba(200,240,122,0.14), transparent 40%), radial-gradient(circle at 80% 0%, rgba(62,207,191,0.1), transparent 35%)",
+              "radial-gradient(ellipse 70% 55% at 0% 0%, rgba(200,240,122,0.1), transparent 55%)",
           }}
         />
-        <div className="relative flex flex-wrap items-end justify-between gap-4">
-          <div>
+        <div className="relative flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                className="rounded-md p-1.5 text-[var(--muted)] hover:bg-white/5 hover:text-[#f4f4f5]"
+                className="rounded-md p-1.5 text-[var(--mute)] hover:bg-white/5 hover:text-[var(--highlight)]"
                 onClick={() => shiftDay(-1)}
                 aria-label="Previous day"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
-              <p className="text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
+              <p className="text-xs uppercase tracking-[0.18em] text-[var(--mute)]">
                 {format(parseISO(date), "EEE d MMM")}
               </p>
               <button
                 type="button"
-                className="rounded-md p-1.5 text-[var(--muted)] hover:bg-white/5 hover:text-[#f4f4f5] disabled:opacity-30"
+                className="rounded-md p-1.5 text-[var(--mute)] hover:bg-white/5 hover:text-[var(--highlight)] disabled:opacity-30"
                 onClick={() => shiftDay(1)}
                 disabled={viewingToday}
                 aria-label="Next day"
@@ -268,23 +268,24 @@ export default function TodayPage() {
               {!viewingToday ? (
                 <button
                   type="button"
-                  className="ml-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--accent)]"
+                  className="ml-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--primary)]"
                   onClick={() => setDate(todayKey())}
                 >
                   Jump to today
                 </button>
               ) : null}
             </div>
-            <h1 className="font-display mt-1 text-4xl tracking-tight text-[#f4f4f5] md:text-5xl">
+            <h1 className="font-display mt-1 text-4xl tracking-tight text-[var(--highlight)] md:text-5xl">
               {viewingToday ? "Today" : format(parseISO(date), "MMM d")}
             </h1>
-            <p className="mt-2 max-w-md text-[var(--muted)]">
-              Snap a plate or describe it — Grok estimates the macros.
+            <p className="mt-2 max-w-md text-sm text-[var(--mute)]">
+              Daily fuel check — calories (primary) and protein (secondary), then
+              the rest of the plate.
             </p>
           </div>
           <button
             type="button"
-            className="btn btn-primary"
+            className="btn btn-primary shrink-0"
             data-testid="log-meal-open"
             onClick={() => setOpen(true)}
           >
@@ -293,80 +294,84 @@ export default function TodayPage() {
           </button>
         </div>
 
-        <div className="relative mt-5 flex flex-wrap gap-2">
-          <span
-            className="status-chip"
-            data-tone={underTarget ? "ok" : "warn"}
-          >
-            {calorieTarget == null
-              ? "Target pending"
-              : underTarget
-                ? "On calorie target"
-                : "Over calorie target"}
-          </span>
-          <span
-            className="status-chip"
-            data-tone={proteinHit ? "info" : undefined}
-          >
-            {proteinTarget == null
-              ? "Protein pending"
-              : proteinHit
-                ? "Protein hit"
-                : `${formatNumber(Math.max(0, Math.round((proteinTarget ?? 0) - totals.proteinG)))}g protein left`}
-          </span>
-          {energyDelta != null ? (
-            <span
-              className="status-chip"
-              data-tone={energyDelta >= 0 ? "ok" : "warn"}
-            >
-              {energyDelta >= 0 ? "Deficit" : "Surplus"}{" "}
-              {formatNumber(Math.abs(energyDelta))} kcal
-            </span>
-          ) : null}
-          {streak > 0 ? (
-            <span className="status-chip" data-tone="info">
-              {streak}d protein streak
-            </span>
-          ) : null}
-        </div>
+        <div className="relative mt-6 grid gap-5 border-t border-white/[0.06] pt-5 lg:grid-cols-[auto_1fr] lg:items-center">
+          <div className="flex flex-wrap items-center justify-center gap-6 sm:justify-start md:gap-8">
+            <MacroRing
+              value={totals.calories}
+              target={calorieTarget}
+              label="Calories"
+              color="var(--primary)"
+              loading={loading}
+            />
+            <MacroRing
+              value={totals.proteinG}
+              target={proteinTarget}
+              label="Protein"
+              unit="g"
+              color="var(--secondary)"
+              loading={loading}
+            />
+          </div>
 
-        <div className="relative mt-8 flex flex-wrap items-center justify-center gap-8 sm:justify-start md:gap-12">
-          <MacroRing
-            value={totals.calories}
-            target={calorieTarget}
-            label="Calories"
-            color="var(--accent)"
-            loading={loading}
-          />
-          <MacroRing
-            value={totals.proteinG}
-            target={proteinTarget}
-            label="Protein"
-            unit="g"
-            color="var(--protein)"
-            loading={loading}
-          />
-          <div className="min-w-[9rem] space-y-2 text-sm text-[var(--muted)]">
-            <p>
-              <span className="text-[#f4f4f5]">
-                {loading ? "…" : formatNumber(Math.round(totals.carbsG))}g
-              </span>{" "}
-              carbs
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              <span
+                className="status-chip"
+                data-tone={underTarget ? "ok" : "warn"}
+              >
+                {calorieTarget == null
+                  ? "Target pending"
+                  : underTarget
+                    ? "On calorie target"
+                    : "Over calorie target"}
+              </span>
+              <span
+                className="status-chip"
+                data-tone={proteinHit ? "info" : undefined}
+              >
+                {proteinTarget == null
+                  ? "Protein pending"
+                  : proteinHit
+                    ? "Protein hit"
+                    : `${formatNumber(Math.max(0, Math.round((proteinTarget ?? 0) - totals.proteinG)))}g protein left`}
+              </span>
+              {energyDelta != null ? (
+                <span
+                  className="status-chip"
+                  data-tone={energyDelta >= 0 ? "ok" : "warn"}
+                >
+                  {energyDelta >= 0 ? "Deficit" : "Surplus"}{" "}
+                  {formatNumber(Math.abs(energyDelta))} kcal
+                </span>
+              ) : null}
+              {streak > 0 ? (
+                <span className="status-chip" data-tone="info">
+                  {streak}d protein streak
+                </span>
+              ) : null}
+            </div>
+
+            <p className="text-sm tabular-nums text-[var(--highlight)]">
+              <span>
+                {loading ? "…" : formatNumber(Math.round(totals.carbsG))}g C
+              </span>
+              <span className="text-[var(--mute)]"> · </span>
+              <span>
+                {loading ? "…" : formatNumber(Math.round(totals.fatG))}g F
+              </span>
+              <span className="text-[var(--mute)]"> · </span>
+              <span className="text-[var(--mute)]">
+                {meals.length} item{meals.length === 1 ? "" : "s"}
+              </span>
+              {maintenance != null ? (
+                <>
+                  <span className="text-[var(--mute)]"> · </span>
+                  <span className="text-[var(--mute)]">
+                    Maint {formatNumber(maintenance)}
+                  </span>
+                </>
+              ) : null}
             </p>
-            <p>
-              <span className="text-[#f4f4f5]">
-                {loading ? "…" : formatNumber(Math.round(totals.fatG))}g
-              </span>{" "}
-              fat
-            </p>
-            <p>
-              {meals.length} item{meals.length === 1 ? "" : "s"} logged
-            </p>
-            {maintenance != null ? (
-              <p className="text-xs">
-                Maintenance {formatNumber(maintenance)}
-              </p>
-            ) : null}
           </div>
         </div>
       </section>
@@ -391,7 +396,7 @@ export default function TodayPage() {
           grouped.map(({ type, items }) =>
             items.length === 0 ? null : (
               <div key={type} className="panel p-4">
-                <h2 className="mb-3 text-xs uppercase tracking-[0.16em] text-[var(--muted)]">
+                <h2 className="mb-3 text-xs uppercase tracking-[0.16em] text-[var(--mute)]">
                   {mealTypeLabel(asMealType(type))}
                 </h2>
                 <ul className="space-y-3">
@@ -415,21 +420,21 @@ export default function TodayPage() {
                             unoptimized
                           />
                         ) : (
-                          <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-white/5 text-xs text-[var(--muted)]">
+                          <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-white/5 text-xs text-[var(--mute)]">
                             —
                           </div>
                         )}
                         <div className="min-w-0 flex-1">
-                          <p className="truncate font-medium text-[#f4f4f5]">
+                          <p className="truncate font-medium text-[var(--highlight)]">
                             {m.name}
                             {m.quantity ? (
-                              <span className="text-[var(--muted)]">
+                              <span className="text-[var(--mute)]">
                                 {" "}
                                 · {m.quantity}
                               </span>
                             ) : null}
                           </p>
-                          <p className="text-xs text-[var(--muted)]">
+                          <p className="text-xs text-[var(--mute)]">
                             {m.time ?? "—"} · {share}% of day
                           </p>
                           <div className="progress-track mt-1.5 max-w-[12rem]">
@@ -437,22 +442,32 @@ export default function TodayPage() {
                               className="progress-fill"
                               style={{
                                 width: `${share}%`,
-                                background: "var(--accent-2)",
+                                background: "var(--primary)",
                               }}
                             />
                           </div>
                         </div>
                         <div className="text-right text-sm tabular-nums">
-                          <p className="text-[var(--protein)]">
-                            {formatNumber(m.proteinG, 0)}g P
+                          <p className="whitespace-nowrap">
+                            <span className="text-[var(--secondary)]">
+                              {formatNumber(m.proteinG, 0)}P
+                            </span>
+                            <span className="text-[var(--mute)]"> · </span>
+                            <span className="text-[var(--highlight)]">
+                              {formatNumber(m.carbsG, 0)}C
+                            </span>
+                            <span className="text-[var(--mute)]"> · </span>
+                            <span className="text-[var(--highlight)]">
+                              {formatNumber(m.fatG, 0)}F
+                            </span>
                           </p>
-                          <p className="text-[#d4d4d8]">
+                          <p className="text-[var(--mute)]">
                             {formatNumber(m.calories, 0)} kcal
                           </p>
                         </div>
                         <button
                           type="button"
-                          className="rounded-md p-2 text-[var(--muted)] hover:bg-white/5 hover:text-[var(--danger)]"
+                          className="rounded-md p-2 text-[var(--mute)] hover:bg-white/5 hover:text-[var(--secondary)]"
                           onClick={() => void removeMeal(m.id)}
                           aria-label="Delete meal"
                         >
@@ -497,7 +512,7 @@ export default function TodayPage() {
                 Close
               </button>
             </div>
-            <p className="mt-1 text-sm text-[var(--muted)]">
+            <p className="mt-1 text-sm text-[var(--mute)]">
               Saving to {format(parseISO(date), "EEE d MMM")} · photo and/or
               description → Grok estimates macros.
             </p>
@@ -582,7 +597,7 @@ export default function TodayPage() {
               ) : null}
 
               {error ? (
-                <p className="rounded-lg border border-[var(--danger)]/40 bg-[var(--danger)]/10 px-3 py-2 text-sm text-[#f0c0c0]">
+                <p className="rounded-lg border border-[var(--secondary)]/40 bg-[var(--secondary)]/10 px-3 py-2 text-sm text-[var(--highlight)]">
                   {error}
                 </p>
               ) : null}
@@ -668,7 +683,7 @@ export default function TodayPage() {
                     </div>
                   </div>
                   {draft.notes ? (
-                    <p className="text-xs text-[var(--muted)]">{draft.notes}</p>
+                    <p className="text-xs text-[var(--mute)]">{draft.notes}</p>
                   ) : null}
                   <button
                     type="button"

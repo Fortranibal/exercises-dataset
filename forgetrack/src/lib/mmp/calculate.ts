@@ -45,6 +45,24 @@ function leanBodyMass(weightKg: number, bodyFatPct: number): number {
   return weightKg * (1 - bodyFatPct / 100);
 }
 
+/**
+ * Deurenberg adult body-fat estimate from BMI, age, and sex.
+ * Used when BF isn't logged from calipers / DEXA elsewhere.
+ * Sex: 1 = male, 0 = female.
+ */
+export function estimateBodyFatPct(input: {
+  heightCm: number;
+  weightKg: number;
+  age: number;
+  gender: Gender;
+}): number {
+  const hM = Math.max(0.5, input.heightCm / 100);
+  const bmi = input.weightKg / (hM * hM);
+  const sex = input.gender === "M" ? 1 : 0;
+  const bf = 1.2 * bmi + 0.23 * input.age - 10.8 * sex - 5.4;
+  return Math.round(Math.max(5, Math.min(55, bf)) * 10) / 10;
+}
+
 /** Simple heuristic: height(cm) − 100 */
 export function simpleMaxLbmKg(heightCm: number): number {
   return heightCm - 100;

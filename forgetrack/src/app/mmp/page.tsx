@@ -98,7 +98,7 @@ export default function MmpPage() {
   }
 
   if (!data) {
-    return <div className="text-[var(--muted)]">Loading MMP…</div>;
+    return <div className="text-[var(--mute)]">Loading MMP…</div>;
   }
 
   const { mmp, profile } = data;
@@ -110,11 +110,11 @@ export default function MmpPage() {
   return (
     <div className="space-y-6">
       <header className="animate-rise">
-        <p className="text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
+        <p className="text-xs uppercase tracking-[0.18em] text-[var(--mute)]">
           Genetics ceiling
         </p>
         <h1 className="font-display mt-1 text-4xl">Maximum muscular potential</h1>
-        <p className="mt-2 max-w-2xl text-[var(--muted)]">
+        <p className="mt-2 max-w-2xl text-[var(--mute)]">
           Casey Butt lean-mass estimate plus measurement regressions and golden
           ratios — your personal ceiling, not a promise.
         </p>
@@ -131,17 +131,17 @@ export default function MmpPage() {
         <div className="relative grid gap-6 md:grid-cols-[auto_1fr] md:items-center">
           <MmpGauge pct={progressPct} />
           <div>
-            <p className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">
+            <p className="text-xs uppercase tracking-[0.16em] text-[var(--mute)]">
               Toward average MMP
             </p>
             <p className="font-display mt-1 text-3xl md:text-4xl">
               {formatNumber(mmp.currentLbmKg, 1)}
-              <span className="text-lg text-[var(--muted)]">
+              <span className="text-lg text-[var(--mute)]">
                 {" "}
                 / {formatNumber(mmp.avgMaxLbmKg, 1)} kg LBM
               </span>
             </p>
-            <p className="mt-2 text-sm text-[var(--muted)]">
+            <p className="mt-2 text-sm text-[var(--mute)]">
               {formatNumber(mmp.remainingLbmKg, 1)} kg lean still on the table ·
               realistic max {formatNumber(mmp.realisticMaxLbmKg, 1)} kg
             </p>
@@ -214,7 +214,7 @@ export default function MmpPage() {
           </div>
         </div>
         {msg ? (
-          <p className="mt-2 text-sm text-[var(--accent)]">{msg}</p>
+          <p className="mt-2 text-sm text-[var(--primary)]">{msg}</p>
         ) : null}
       </section>
 
@@ -223,7 +223,7 @@ export default function MmpPage() {
         style={{ animationDelay: "0.1s" }}
       >
         <h2 className="font-display text-xl">Maximum measurements</h2>
-        <p className="mb-4 text-sm text-[var(--muted)]">
+        <p className="mb-4 text-sm text-[var(--mute)]">
           Predicted MMP circumferences from wrist, ankle, and height.
         </p>
         <ul className="space-y-3">
@@ -237,7 +237,7 @@ export default function MmpPage() {
               <li key={key}>
                 <div className="mb-1 flex justify-between text-sm">
                   <span>{MEASUREMENT_LABELS[key] ?? key}</span>
-                  <span className="tabular-nums text-[var(--muted)]">
+                  <span className="tabular-nums text-[var(--mute)]">
                     MMP {formatNumber(value, 1)} cm
                     {pct != null ? ` · ${pct}%` : ""}
                   </span>
@@ -247,7 +247,7 @@ export default function MmpPage() {
                     className="progress-fill"
                     style={{
                       width: `${pct ?? 0}%`,
-                      background: "var(--accent)",
+                      background: "var(--primary)",
                     }}
                   />
                 </div>
@@ -278,12 +278,12 @@ export default function MmpPage() {
                 key={key}
                 className="flex justify-between border-b border-white/5 py-2"
               >
-                <span className="text-[var(--muted)]">{label}</span>
+                <span className="text-[var(--mute)]">{label}</span>
                 <span className="tabular-nums">
                   {mmp.ratios[key] != null
                     ? formatNumber(mmp.ratios[key] as number, 2)
                     : "—"}
-                  <span className="text-[var(--muted)]">
+                  <span className="text-[var(--mute)]">
                     {" "}
                     / {formatNumber(mmp.goldenTargets[key], 2)}
                   </span>
@@ -297,36 +297,36 @@ export default function MmpPage() {
           style={{ animationDelay: "0.18s" }}
         >
           <h2 className="font-display text-xl">Phase macros</h2>
-          <p className="mt-1 text-sm text-[var(--muted)]">
+          <p className="mt-1 text-sm text-[var(--mute)]">
             From activity multipliers + phase coefficients.
           </p>
           <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
             <div>
-              <dt className="text-[var(--muted)]">Target kcal</dt>
+              <dt className="text-[var(--mute)]">Target kcal</dt>
               <dd className="font-display text-2xl">
                 {formatNumber(mmp.macros.targetKcal)}
               </dd>
             </div>
             <div>
-              <dt className="text-[var(--muted)]">Maintenance</dt>
+              <dt className="text-[var(--mute)]">Maintenance</dt>
               <dd className="font-display text-2xl">
                 {formatNumber(mmp.macros.realExpenditure)}
               </dd>
             </div>
             <div>
-              <dt className="text-[var(--muted)]">Protein</dt>
+              <dt className="text-[var(--mute)]">Protein</dt>
               <dd>{mmp.macros.proteinG} g</dd>
             </div>
             <div>
-              <dt className="text-[var(--muted)]">Fat</dt>
+              <dt className="text-[var(--mute)]">Fat</dt>
               <dd>{mmp.macros.fatG} g</dd>
             </div>
             <div>
-              <dt className="text-[var(--muted)]">Carbs</dt>
+              <dt className="text-[var(--mute)]">Carbs</dt>
               <dd>{mmp.macros.carbsG} g</dd>
             </div>
             <div>
-              <dt className="text-[var(--muted)]">Weekly ∆ weight</dt>
+              <dt className="text-[var(--mute)]">Weekly ∆ weight</dt>
               <dd>{formatNumber(mmp.macros.weeklyDeltaKg, 2)} kg</dd>
             </div>
           </dl>
@@ -359,7 +359,7 @@ function MmpGauge({ pct }: { pct: number }) {
           cy={size / 2}
           r={r}
           fill="none"
-          stroke="var(--accent)"
+          stroke="var(--primary)"
           strokeWidth={stroke}
           strokeLinecap="round"
           strokeDasharray={c}
@@ -372,7 +372,7 @@ function MmpGauge({ pct }: { pct: number }) {
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <p className="font-display text-3xl tabular-nums">{pct}%</p>
-        <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--muted)]">
+        <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--mute)]">
           of avg MMP
         </p>
       </div>
@@ -391,11 +391,11 @@ function Stat({
 }) {
   return (
     <div className="panel p-4">
-      <p className="text-xs uppercase tracking-[0.14em] text-[var(--muted)]">
+      <p className="text-xs uppercase tracking-[0.14em] text-[var(--mute)]">
         {label}
       </p>
       <p className="font-display mt-1 text-3xl">{value}</p>
-      <p className="mt-1 text-xs text-[var(--muted)]">{hint}</p>
+      <p className="mt-1 text-xs text-[var(--mute)]">{hint}</p>
     </div>
   );
 }

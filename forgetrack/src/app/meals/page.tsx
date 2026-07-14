@@ -53,11 +53,11 @@ export default function MealsHistoryPage() {
   return (
     <div className="space-y-6">
       <header className="animate-rise">
-        <p className="text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
+        <p className="text-xs uppercase tracking-[0.18em] text-[var(--mute)]">
           History
         </p>
-        <h1 className="font-display mt-1 text-4xl text-[#f4f4f5]">Meals</h1>
-        <p className="mt-2 max-w-xl text-[var(--muted)]">
+        <h1 className="font-display mt-1 text-4xl text-[var(--highlight)]">Meals</h1>
+        <p className="mt-2 max-w-xl text-[var(--mute)]">
           Every logged plate with photos and macro breakdowns, grouped by day.
         </p>
         <input
@@ -114,10 +114,9 @@ export default function MealsHistoryPage() {
                   <h2 className="font-display text-xl">
                     {format(parseISO(date), "EEE d MMM yyyy")}
                   </h2>
-                  <p className="text-sm text-[var(--muted)]">
+                  <p className="text-sm text-[var(--mute)]">
                     {formatNumber(Math.round(totals.cal))} kcal ·{" "}
-                    {formatNumber(Math.round(totals.p))} g protein ·{" "}
-                    {items.length} items
+                    {formatNumber(Math.round(totals.p))}P
                   </p>
                 </div>
                 <ul className="space-y-3">
@@ -140,29 +139,35 @@ export default function MealsHistoryPage() {
                           />
                         </button>
                       ) : (
-                        <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-lg bg-white/5 text-xs text-[var(--muted)]">
+                        <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-lg bg-white/5 text-xs text-[var(--mute)]">
                           no photo
                         </div>
                       )}
                       <div className="min-w-0 flex-1">
-                        <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--muted)]">
+                        <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--mute)]">
                           {mealTypeLabel(asMealType(m.mealType))}
                           {m.time ? ` · ${m.time}` : ""}
                         </p>
                         <p className="truncate font-medium">{m.name}</p>
-                        <p className="text-sm text-[var(--muted)]">
+                        <p className="text-sm text-[var(--mute)]">
                           {m.quantity || m.description || "—"}
                         </p>
                       </div>
                       <div className="shrink-0 text-right text-sm tabular-nums">
-                        <p className="text-[var(--protein)]">
-                          {formatNumber(m.proteinG, 0)}g P
+                        <p className="whitespace-nowrap">
+                          <span className="text-[var(--secondary)]">
+                            {formatNumber(m.proteinG, 0)}P
+                          </span>
+                          <span className="text-[var(--mute)]"> · </span>
+                          <span className="text-[var(--highlight)]">
+                            {formatNumber(m.carbsG, 0)}C
+                          </span>
+                          <span className="text-[var(--mute)]"> · </span>
+                          <span className="text-[var(--highlight)]">
+                            {formatNumber(m.fatG, 0)}F
+                          </span>
                         </p>
-                        <p>
-                          {formatNumber(m.carbsG, 0)}C ·{" "}
-                          {formatNumber(m.fatG, 0)}F
-                        </p>
-                        <p className="text-[#d4d4d8]">
+                        <p className="text-[var(--mute)]">
                           {formatNumber(m.calories, 0)} kcal
                         </p>
                       </div>
@@ -206,9 +211,9 @@ export default function MealsHistoryPage() {
             <div className="mt-3 flex items-start justify-between gap-3 px-1">
               <div>
                 <p className="font-medium">{lightbox.name}</p>
-                <p className="text-sm text-[var(--muted)]">
+                <p className="text-sm text-[var(--mute)]">
                   {formatNumber(lightbox.calories, 0)} kcal ·{" "}
-                  {formatNumber(lightbox.proteinG, 0)}g protein
+                  {formatNumber(lightbox.proteinG, 0)}P
                 </p>
               </div>
               <button

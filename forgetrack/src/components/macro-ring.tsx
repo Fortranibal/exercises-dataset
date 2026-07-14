@@ -47,7 +47,7 @@ export function MacroRing({
             cy={size / 2}
             r={r}
             fill="none"
-            stroke={over ? "var(--warn)" : color}
+            stroke={over ? "var(--secondary)" : color}
             strokeWidth={stroke}
             strokeLinecap="round"
             strokeDasharray={c}
@@ -57,15 +57,15 @@ export function MacroRing({
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-          <p className="font-display text-xl tabular-nums leading-none text-[#f4f4f5]">
+          <p className="font-display text-xl tabular-nums leading-none text-[var(--highlight)]">
             {loading ? "…" : formatNumber(Math.round(value))}
           </p>
-          <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-[var(--muted)]">
+          <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-[var(--mute)]">
             {target != null ? `/ ${formatNumber(target)}${unit}` : "—"}
           </p>
         </div>
       </div>
-      <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+      <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--mute)]">
         {label}
       </p>
     </div>

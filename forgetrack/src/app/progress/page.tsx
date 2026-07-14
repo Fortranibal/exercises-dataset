@@ -27,7 +27,7 @@ import {
   proteinHitRate,
   proteinStreak,
 } from "@/lib/adherence";
-import { CHART } from "@/lib/charts/theme";
+import { CHART, CHART_BAR_CURSOR, CHART_TOOLTIP } from "@/lib/charts/theme";
 import { formatNumber } from "@/lib/utils";
 
 type Daily = {
@@ -130,17 +130,17 @@ export default function ProgressPage() {
     <div className="space-y-8">
       <header className="animate-rise">
         <div className="flex flex-wrap items-center gap-3">
-          <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--muted)]">
+          <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--mute)]">
             Analytics
           </p>
           <span className="status-chip" data-tone="ok">
             {phase} phase
           </span>
         </div>
-        <h1 className="mt-1 font-display text-4xl tracking-tight text-[var(--foreground)] md:text-5xl">
+        <h1 className="mt-1 font-display text-4xl tracking-tight text-[var(--highlight)] md:text-5xl">
           Progress
         </h1>
-        <p className="mt-2 max-w-2xl text-[15px] text-[var(--muted)]">
+        <p className="mt-2 max-w-2xl text-[15px] text-[var(--mute)]">
           Intake distributions, body recomposition, and the calories × protein
           map — the same lens as your training journal plots.
         </p>
@@ -195,7 +195,7 @@ export default function ProgressPage() {
             <h2 className="text-[15px] font-semibold uppercase tracking-[0.14em]">
               This week
             </h2>
-            <p className="mt-1 text-[13px] text-[var(--muted)]">
+            <p className="mt-1 text-[13px] text-[var(--mute)]">
               Last 7 calendar days · bar = eaten · dashed = target / protein
               floor
             </p>
@@ -219,18 +219,25 @@ export default function ProgressPage() {
                         axisLine={false}
                       />
                       <Tooltip
-                        contentStyle={{
-                          background: "#16161a",
-                          border: "1px solid rgba(255,255,255,0.1)",
-                          borderRadius: 8,
-                        }}
+                        cursor={CHART_BAR_CURSOR}
+                        contentStyle={CHART_TOOLTIP.contentStyle}
+                        labelStyle={CHART_TOOLTIP.labelStyle}
+                        itemStyle={CHART_TOOLTIP.itemStyle}
                       />
                       <ReferenceLine
                         y={calorieTarget}
                         stroke={CHART.calOk}
                         strokeDasharray="4 4"
                       />
-                      <Bar dataKey="calories" radius={[3, 3, 0, 0]}>
+                      <Bar
+                        dataKey="calories"
+                        radius={[3, 3, 0, 0]}
+                        activeBar={{
+                          fill: CHART.calOk,
+                          stroke: "rgba(255,255,255,0.35)",
+                          strokeWidth: 1,
+                        }}
+                      >
                         {week.map((d) => (
                           <Cell
                             key={d.date}
@@ -254,7 +261,7 @@ export default function ProgressPage() {
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
-                  <p className="mt-1 text-center text-[11px] uppercase tracking-[0.12em] text-[var(--muted)]">
+                  <p className="mt-1 text-center text-[11px] uppercase tracking-[0.12em] text-[var(--mute)]">
                     Calories · target {formatNumber(calorieTarget)}
                   </p>
                 </div>
@@ -277,18 +284,25 @@ export default function ProgressPage() {
                         domain={[0, Math.max(proteinFloor * 1.15, 120)]}
                       />
                       <Tooltip
-                        contentStyle={{
-                          background: "#16161a",
-                          border: "1px solid rgba(255,255,255,0.1)",
-                          borderRadius: 8,
-                        }}
+                        cursor={CHART_BAR_CURSOR}
+                        contentStyle={CHART_TOOLTIP.contentStyle}
+                        labelStyle={CHART_TOOLTIP.labelStyle}
+                        itemStyle={CHART_TOOLTIP.itemStyle}
                       />
                       <ReferenceLine
                         y={proteinFloor}
                         stroke={CHART.protein}
                         strokeDasharray="4 4"
                       />
-                      <Bar dataKey="proteinG" radius={[3, 3, 0, 0]}>
+                      <Bar
+                        dataKey="proteinG"
+                        radius={[3, 3, 0, 0]}
+                        activeBar={{
+                          fill: CHART.protein,
+                          stroke: "rgba(255,255,255,0.35)",
+                          strokeWidth: 1,
+                        }}
+                      >
                         {week.map((d) => (
                           <Cell
                             key={d.date}
@@ -310,7 +324,7 @@ export default function ProgressPage() {
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
-                  <p className="mt-1 text-center text-[11px] uppercase tracking-[0.12em] text-[var(--muted)]">
+                  <p className="mt-1 text-center text-[11px] uppercase tracking-[0.12em] text-[var(--mute)]">
                     Protein · floor {proteinFloor}g
                   </p>
                 </div>
@@ -349,7 +363,7 @@ export default function ProgressPage() {
 
 function Empty({ hint }: { hint: string }) {
   return (
-    <div className="mt-4 rounded-xl border border-dashed border-white/10 px-4 py-12 text-center text-sm text-[var(--muted)]">
+    <div className="mt-4 rounded-xl border border-dashed border-white/10 px-4 py-12 text-center text-sm text-[var(--mute)]">
       {hint}
     </div>
   );
@@ -366,13 +380,13 @@ function Kpi({
 }) {
   return (
     <div className="chart-panel px-4 py-3.5">
-      <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-[var(--muted)]">
+      <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-[var(--mute)]">
         {label}
       </p>
-      <p className="font-display mt-1 text-2xl tabular-nums text-[#f4f4f5]">
+      <p className="font-display mt-1 text-2xl tabular-nums text-[var(--highlight)]">
         {value}
       </p>
-      <p className="mt-1 text-[11px] text-[var(--muted)]">{hint}</p>
+      <p className="mt-1 text-[11px] text-[var(--mute)]">{hint}</p>
     </div>
   );
 }
