@@ -1,4 +1,4 @@
-# caltrack
+# forgetrack
 node_modules/
 .next/
 data/*.sqlite

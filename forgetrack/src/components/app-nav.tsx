@@ -38,7 +38,7 @@ export function AppNav() {
           </span>
           <span className="flex items-baseline gap-2.5">
             <span className="font-display text-[1.65rem] tracking-tight text-[#f4f4f5]">
-              Forge
+              ForgeTrack
             </span>
             <span className="hidden text-[10px] font-medium uppercase tracking-[0.22em] text-[#8b8b96] sm:inline">
               train · fuel · track

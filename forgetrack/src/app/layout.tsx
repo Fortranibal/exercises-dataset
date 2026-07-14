@@ -15,7 +15,7 @@ const syne = Syne({
 });
 
 export const metadata: Metadata = {
-  title: "Forge — train, fuel, track",
+  title: "ForgeTrack — train, fuel, track",
   description:
     "Log meals with Grok vision, track macros, MMP, strength, and physique progress.",
 };

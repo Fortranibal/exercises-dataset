@@ -1,5 +1,5 @@
 /**
- * Seed rich demo data for Forge charts (multi-month intake + body recomp).
+ * Seed rich demo data for ForgeTrack charts (multi-month intake + body recomp).
  * Usage: npx tsx scripts/seed.ts [--force]
  */
 import Database from "better-sqlite3";
@@ -9,7 +9,7 @@ import path from "node:path";
 
 const force = process.argv.includes("--force");
 const dataDir = path.join(process.cwd(), "data");
-const dbPath = path.join(dataDir, "caltrack.sqlite");
+const dbPath = path.join(dataDir, "forgetrack.sqlite");
 fs.mkdirSync(dataDir, { recursive: true });
 
 const db = new Database(dbPath);

@@ -1,4 +1,4 @@
-# Forge
+# ForgeTrack
 
 Personal nutrition & physique tracker: log meals with **xAI Grok vision**, review daily/history macros, chart progress (ridge densities, recomposition, calories×protein), track maximum muscular potential, strength, and physique photos.
 
@@ -15,7 +15,7 @@ Personal nutrition & physique tracker: log meals with **xAI Grok vision**, revie
 ## Setup
 
 ```bash
-cd caltrack
+cd forgetrack
 cp .env.example .env.local
 # set XAI_API_KEY=... from https://console.x.ai/
 npm install
@@ -25,7 +25,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-SQLite lives at `data/caltrack.sqlite`. Uploads at `data/uploads/` (served via `/api/uploads/...`).
+SQLite lives at `data/forgetrack.sqlite`. Uploads at `data/uploads/` (served via `/api/uploads/...`).
 
 ## Stack
 

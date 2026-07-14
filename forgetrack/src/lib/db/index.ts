@@ -5,7 +5,7 @@ import path from "node:path";
 import * as schema from "./schema";
 
 const dataDir = path.join(process.cwd(), "data");
-const dbPath = path.join(dataDir, "caltrack.sqlite");
+const dbPath = path.join(dataDir, "forgetrack.sqlite");
 
 function ensureDb() {
   if (!fs.existsSync(dataDir)) {
@@ -108,12 +108,12 @@ function ensureDb() {
 }
 
 const globalForDb = globalThis as unknown as {
-  __caltrackSqlite?: Database.Database;
+  __forgetrackSqlite?: Database.Database;
 };
 
-const sqlite = globalForDb.__caltrackSqlite ?? ensureDb();
+const sqlite = globalForDb.__forgetrackSqlite ?? ensureDb();
 if (process.env.NODE_ENV !== "production") {
-  globalForDb.__caltrackSqlite = sqlite;
+  globalForDb.__forgetrackSqlite = sqlite;
 }
 
 export const db = drizzle(sqlite, { schema });
