@@ -226,6 +226,55 @@ db.transaction(() => {
     }
   }
 
+  // Always seed "today" so the Today screen has demo content.
+  const now = new Date();
+  const today = dateISO(now.getFullYear(), now.getMonth() + 1, now.getDate());
+  db.prepare("DELETE FROM meals WHERE date = ?").run(today);
+  const todayMeals = [
+    {
+      mealType: "lunch",
+      time: "13:30",
+      name: "turkey wrap",
+      calories: 1002,
+      proteinG: 41,
+      carbsG: 98,
+      fatG: 38,
+    },
+    {
+      mealType: "dinner",
+      time: "20:00",
+      name: "lean pasta",
+      calories: 606,
+      proteinG: 25,
+      carbsG: 82,
+      fatG: 18,
+    },
+    {
+      mealType: "snack",
+      time: "16:30",
+      name: "dark chocolate",
+      calories: 218,
+      proteinG: 9,
+      carbsG: 22,
+      fatG: 12,
+    },
+  ];
+  for (const part of todayMeals) {
+    insertMeal.run({
+      id: randomUUID(),
+      date: today,
+      time: part.time,
+      mealType: part.mealType,
+      name: part.name,
+      quantity: null,
+      calories: part.calories,
+      proteinG: part.proteinG,
+      carbsG: part.carbsG,
+      fatG: part.fatG,
+    });
+    mealRows += 1;
+  }
+
   // Body recomposition arc: Feb ~55.5kg/24.8% → Jul ~53.0kg/23.5%
   const bodyPoints = [
     { date: "2026-02-08", weightKg: 55.8, bodyFatPct: 25.2 },
