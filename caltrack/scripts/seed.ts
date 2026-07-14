@@ -162,14 +162,51 @@ db.transaction(() => {
         Math.round((calories - proteinG * 4 - fatG * 9) / 4),
       );
 
-      // Split into 2–3 meal rows so history looks real
       const lunchShare = rand(0.4, 0.55);
       const dinnerShare = rand(0.3, 0.4);
       const snackShare = 1 - lunchShare - dinnerShare;
+      const lunchNames = [
+        "chicken rice bowl",
+        "beef stir-fry",
+        "tuna salad",
+        "turkey wrap",
+        "salmon + greens",
+      ];
+      const dinnerNames = [
+        "lean pasta",
+        "yogurt bowl",
+        "steak + potatoes",
+        "tofu stir-fry",
+        "omelette plate",
+      ];
+      const snackNames = [
+        "Greek yogurt",
+        "protein shake",
+        "banana + PB",
+        "dark chocolate",
+        "cottage cheese",
+      ];
+      const pick = (arr: string[]) =>
+        arr[Math.floor(Math.random() * arr.length)];
       const parts = [
-        { mealType: "lunch", share: lunchShare, time: "13:30", name: "lunch plate" },
-        { mealType: "dinner", share: dinnerShare, time: "20:00", name: "dinner plate" },
-        { mealType: "snack", share: snackShare, time: "16:30", name: "snack" },
+        {
+          mealType: "lunch",
+          share: lunchShare,
+          time: "13:30",
+          name: pick(lunchNames),
+        },
+        {
+          mealType: "dinner",
+          share: dinnerShare,
+          time: "20:00",
+          name: pick(dinnerNames),
+        },
+        {
+          mealType: "snack",
+          share: snackShare,
+          time: "16:30",
+          name: pick(snackNames),
+        },
       ];
       for (const part of parts) {
         insertMeal.run({
@@ -178,7 +215,7 @@ db.transaction(() => {
           time: part.time,
           mealType: part.mealType,
           name: part.name,
-          quantity: "tracked day",
+          quantity: null,
           calories: Math.round(calories * part.share),
           proteinG: Math.round(proteinG * part.share),
           carbsG: Math.round(carbsG * part.share),

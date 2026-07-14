@@ -5,11 +5,13 @@ import {
   Area,
   AreaChart,
   CartesianGrid,
+  Line,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
-  ReferenceDot,
+  ReferenceLine,
+  ComposedChart,
 } from "recharts";
 import { format, parseISO } from "date-fns";
 import { CHART } from "@/lib/charts/theme";
@@ -24,15 +26,20 @@ type Point = {
 };
 
 export function BodyRecompChart({ data }: { data: Point[] }) {
-  const chart = useMemo(
-    () =>
-      data.map((r) => ({
+  const chart = useMemo(() => {
+    let lastMonth = "";
+    return data.map((r, i) => {
+      const month = format(parseISO(r.date), "MMM");
+      const showMonth = month !== lastMonth;
+      lastMonth = month;
+      return {
         ...r,
+        idx: i,
         label: format(parseISO(r.date), "MMM d"),
-        monthTick: format(parseISO(r.date), "MMM"),
-      })),
-    [data],
-  );
+        monthTick: showMonth ? month : "",
+      };
+    });
+  }, [data]);
 
   const summary = useMemo(() => {
     if (chart.length < 2) return null;
@@ -50,10 +57,14 @@ export function BodyRecompChart({ data }: { data: Point[] }) {
     if (chart.length === 0) return [0, 100] as [number, number];
     const leanMin = Math.min(...chart.map((d) => d.leanMassKg));
     const weightMax = Math.max(...chart.map((d) => d.weightKg));
-    // Zoom into the composition band (like the reference 75–90 style)
     const lo = Math.floor(leanMin * 0.92);
     const hi = Math.ceil(weightMax * 1.03);
     return [lo, hi] as [number, number];
+  }, [chart]);
+
+  const leanFloor = useMemo(() => {
+    if (chart.length === 0) return 0;
+    return Math.min(...chart.map((d) => d.leanMassKg));
   }, [chart]);
 
   if (chart.length === 0) {
@@ -71,7 +82,7 @@ export function BodyRecompChart({ data }: { data: Point[] }) {
           Body recomposition
         </h2>
         <p className="mt-2 text-[13px] text-[var(--muted)]">
-          {summary && summary.lost > 0
+          {summary && summary.lost > 0.05
             ? `where the ${formatNumber(summary.lost, 1)} kg went.`
             : "lean mass vs fat mass over time."}
         </p>
@@ -97,7 +108,7 @@ export function BodyRecompChart({ data }: { data: Point[] }) {
 
         <div className="h-[340px] md:h-[400px]">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart
+            <ComposedChart
               data={chart}
               margin={{ top: 28, right: 24, left: 8, bottom: 8 }}
             >
@@ -108,7 +119,7 @@ export function BodyRecompChart({ data }: { data: Point[] }) {
                 tick={{ fill: CHART.axis, fontSize: 12 }}
                 axisLine={{ stroke: "rgba(255,255,255,0.1)" }}
                 tickLine={false}
-                interval="preserveStartEnd"
+                interval={0}
               />
               <YAxis
                 stroke={CHART.axis}
@@ -136,10 +147,22 @@ export function BodyRecompChart({ data }: { data: Point[] }) {
                 labelFormatter={(_, payload) =>
                   payload?.[0]?.payload?.label ?? ""
                 }
-                formatter={(value, name) => [
-                  `${formatNumber(Number(value), 1)} kg`,
-                  name === "leanMassKg" ? "Lean" : "Fat",
-                ]}
+                formatter={(value, name) => {
+                  const n = Number(value);
+                  if (name === "weightKg") {
+                    return [`${formatNumber(n, 1)} kg`, "Total"];
+                  }
+                  return [
+                    `${formatNumber(n, 1)} kg`,
+                    name === "leanMassKg" ? "Lean" : "Fat",
+                  ];
+                }}
+              />
+              <ReferenceLine
+                y={leanFloor}
+                stroke="#e07a7a"
+                strokeDasharray="5 4"
+                strokeOpacity={0.55}
               />
               <Area
                 type="monotone"
@@ -149,6 +172,8 @@ export function BodyRecompChart({ data }: { data: Point[] }) {
                 fill={CHART.lean}
                 strokeWidth={1.5}
                 name="leanMassKg"
+                isAnimationActive
+                animationDuration={900}
               />
               <Area
                 type="monotone"
@@ -158,31 +183,28 @@ export function BodyRecompChart({ data }: { data: Point[] }) {
                 fill={CHART.fat}
                 strokeWidth={1.5}
                 name="fatMassKg"
-                dot={{ r: 3, fill: "#fff", strokeWidth: 0 }}
-                activeDot={{ r: 4 }}
+                isAnimationActive
+                animationDuration={900}
               />
-              {summary ? (
-                <>
-                  <ReferenceDot
-                    x={summary.start.monthTick}
-                    y={summary.start.weightKg}
-                    r={0}
-                  />
-                  <ReferenceDot
-                    x={summary.end.monthTick}
-                    y={summary.end.weightKg}
-                    r={0}
-                  />
-                </>
-              ) : null}
-            </AreaChart>
+              <Line
+                type="monotone"
+                dataKey="weightKg"
+                stroke="rgba(255,255,255,0.55)"
+                strokeWidth={1.25}
+                dot={{ r: 3.5, fill: "#fff", strokeWidth: 0 }}
+                activeDot={{ r: 5 }}
+                name="weightKg"
+                isAnimationActive
+                animationDuration={1100}
+              />
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
 
         {summary ? (
           <>
             <Annotation
-              className="left-6 top-14 md:left-10"
+              className="left-4 top-12 max-w-[9.5rem] md:left-8 md:top-14"
               title={format(parseISO(summary.start.date), "MMM d")}
               lines={[
                 `${formatNumber(summary.start.weightKg, 1)} kg`,
@@ -190,14 +212,20 @@ export function BodyRecompChart({ data }: { data: Point[] }) {
               ]}
             />
             <Annotation
-              className="right-6 top-14 md:right-10"
+              className="right-4 top-12 max-w-[9.5rem] md:right-8 md:top-14"
               title={format(parseISO(summary.end.date), "MMM d")}
               lines={[
                 `${formatNumber(summary.end.weightKg, 1)} kg`,
                 `~${formatNumber(summary.end.bodyFatPct, 1)}% BF`,
               ]}
             />
-            <div className="absolute bottom-8 right-6 max-w-[220px] rounded-lg border border-white/10 bg-black/55 px-3 py-2.5 text-[12px] backdrop-blur-sm md:right-10">
+            {summary.leanDelta < -0.3 ? (
+              <p className="pointer-events-none absolute bottom-[42%] left-1/2 -translate-x-1/2 rounded-md border border-[#e07a7a]/35 bg-black/55 px-2.5 py-1 text-[11px] text-[#f0a8a8] backdrop-blur-sm">
+                ~{formatNumber(Math.abs(summary.leanDelta), 1)} kg muscle left on
+                the table
+              </p>
+            ) : null}
+            <div className="absolute bottom-8 right-4 max-w-[220px] rounded-lg border border-white/10 bg-black/60 px-3 py-2.5 text-[12px] backdrop-blur-sm md:right-8">
               {summary.fatShare != null ? (
                 <p className="font-medium text-[var(--foreground)]">
                   {formatNumber(summary.fatShare, 0)}% of loss was fat
@@ -214,6 +242,9 @@ export function BodyRecompChart({ data }: { data: Point[] }) {
               <p className="mt-1 text-[var(--muted)]">
                 Lean {summary.leanDelta >= 0 ? "+" : ""}
                 {formatNumber(summary.leanDelta, 1)} kg
+                {summary.leanDelta < -0.3
+                  ? ` · ~${formatNumber(Math.abs(summary.leanDelta), 1)} kg recoverable`
+                  : ""}
               </p>
             </div>
           </>
@@ -234,7 +265,7 @@ function Annotation({
 }) {
   return (
     <div
-      className={`pointer-events-none absolute rounded-md border border-white/12 bg-black/60 px-2.5 py-1.5 text-[11px] backdrop-blur-sm ${className}`}
+      className={`pointer-events-none absolute rounded-md border border-white/12 bg-black/65 px-2.5 py-1.5 text-[11px] backdrop-blur-sm ${className}`}
     >
       <p className="font-medium text-[var(--foreground)]">{title}</p>
       {lines.map((l) => (

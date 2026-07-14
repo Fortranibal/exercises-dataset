@@ -6,13 +6,19 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  LabelList,
   ResponsiveContainer,
   ReferenceLine,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
-import { format, parseISO } from "date-fns";
+import {
+  format,
+  parseISO,
+  subDays,
+  startOfDay,
+} from "date-fns";
 import { BodyRecompChart } from "@/components/charts/body-recomp-chart";
 import { CaloriesProteinJoint } from "@/components/charts/calories-protein-joint";
 import { IntakeRidgePlot } from "@/components/charts/intake-ridge-plot";
@@ -49,6 +55,7 @@ export default function ProgressPage() {
   const [recomp, setRecomp] = useState<Recomp[]>([]);
   const [macros, setMacros] = useState<ProfileMacros | null>(null);
   const [phase, setPhase] = useState("cut");
+  const [loading, setLoading] = useState(true);
   const [overrides, setOverrides] = useState<{
     calorieTarget: number | null;
     proteinTarget: number | null;
@@ -56,8 +63,8 @@ export default function ProgressPage() {
   }>({ calorieTarget: null, proteinTarget: null, maintenanceKcal: null });
 
   useEffect(() => {
-    void Promise.all([fetch("/api/stats"), fetch("/api/profile")]).then(
-      async ([s, p]) => {
+    void Promise.all([fetch("/api/stats"), fetch("/api/profile")])
+      .then(async ([s, p]) => {
         const sj = await s.json();
         const pj = await p.json();
         setDaily(sj.daily ?? []);
@@ -69,8 +76,8 @@ export default function ProgressPage() {
           proteinTarget: pj.profile?.proteinTarget ?? null,
           maintenanceKcal: pj.profile?.maintenanceKcal ?? null,
         });
-      },
-    );
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const calorieTarget =
@@ -78,7 +85,23 @@ export default function ProgressPage() {
   const proteinFloor = overrides.proteinTarget ?? macros?.proteinG ?? 150;
   const maintenance =
     overrides.maintenanceKcal ?? macros?.realExpenditure ?? 2880;
-  const week = useMemo(() => daily.slice(-7), [daily]);
+
+  const week = useMemo(() => {
+    const byDate = new Map(daily.map((d) => [d.date, d]));
+    const today = startOfDay(new Date());
+    return Array.from({ length: 7 }, (_, i) => {
+      const day = subDays(today, 6 - i);
+      const key = format(day, "yyyy-MM-dd");
+      const hit = byDate.get(key);
+      return {
+        date: key,
+        calories: hit?.calories ?? 0,
+        proteinG: hit?.proteinG ?? 0,
+        empty: !hit,
+      };
+    });
+  }, [daily]);
+
   const hasIntake = daily.length > 0;
 
   return (
@@ -96,131 +119,170 @@ export default function ProgressPage() {
         </p>
       </header>
 
-      {/* Weekly overview — compact companion to the big plots */}
-      <section className="animate-rise chart-panel p-5 md:p-6">
-        <h2 className="text-[15px] font-semibold uppercase tracking-[0.14em]">
-          This week
-        </h2>
-        <p className="mt-1 text-[13px] text-[var(--muted)]">
-          Bar = eaten · dashed line = target / protein floor
-        </p>
-        {hasIntake ? (
-          <div className="mt-4 grid gap-6 lg:grid-cols-2">
-            <div className="h-52">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={week}>
-                  <CartesianGrid stroke={CHART.grid} vertical={false} />
-                  <XAxis
-                    dataKey="date"
-                    tickFormatter={(d) => format(parseISO(d), "EEE d")}
-                    stroke={CHART.axis}
-                    tick={{ fill: CHART.axis, fontSize: 11 }}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    stroke={CHART.axis}
-                    tick={{ fill: CHART.axis, fontSize: 11 }}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      background: "#16161a",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      borderRadius: 8,
-                    }}
-                  />
-                  <ReferenceLine
-                    y={calorieTarget}
-                    stroke={CHART.calOk}
-                    strokeDasharray="4 4"
-                  />
-                  <Bar dataKey="calories" radius={[3, 3, 0, 0]}>
-                    {week.map((d) => (
-                      <Cell
-                        key={d.date}
-                        fill={
-                          d.calories <= calorieTarget
-                            ? CHART.calOk
-                            : CHART.calOver
-                        }
+      {loading ? (
+        <div className="space-y-4">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="chart-panel h-48 animate-pulse bg-white/[0.03]"
+              style={{ animationDelay: `${i * 0.08}s` }}
+            />
+          ))}
+        </div>
+      ) : (
+        <>
+          <section className="animate-rise chart-panel p-5 md:p-6">
+            <h2 className="text-[15px] font-semibold uppercase tracking-[0.14em]">
+              This week
+            </h2>
+            <p className="mt-1 text-[13px] text-[var(--muted)]">
+              Last 7 calendar days · bar = eaten · dashed = target / protein
+              floor
+            </p>
+            {hasIntake ? (
+              <div className="mt-4 grid gap-6 lg:grid-cols-2">
+                <div className="h-56">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={week} margin={{ top: 18, right: 8, left: 0, bottom: 0 }}>
+                      <CartesianGrid stroke={CHART.grid} vertical={false} />
+                      <XAxis
+                        dataKey="date"
+                        tickFormatter={(d) => format(parseISO(d), "EEE d")}
+                        stroke={CHART.axis}
+                        tick={{ fill: CHART.axis, fontSize: 11 }}
+                        tickLine={false}
                       />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-              <p className="mt-1 text-center text-[11px] uppercase tracking-[0.12em] text-[var(--muted)]">
-                Calories · target {formatNumber(calorieTarget)}
-              </p>
-            </div>
-            <div className="h-52">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={week}>
-                  <CartesianGrid stroke={CHART.grid} vertical={false} />
-                  <XAxis
-                    dataKey="date"
-                    tickFormatter={(d) => format(parseISO(d), "EEE d")}
-                    stroke={CHART.axis}
-                    tick={{ fill: CHART.axis, fontSize: 11 }}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    stroke={CHART.axis}
-                    tick={{ fill: CHART.axis, fontSize: 11 }}
-                    tickLine={false}
-                    axisLine={false}
-                    domain={[0, Math.max(proteinFloor * 1.15, 120)]}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      background: "#16161a",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      borderRadius: 8,
-                    }}
-                  />
-                  <ReferenceLine
-                    y={proteinFloor}
-                    stroke={CHART.protein}
-                    strokeDasharray="4 4"
-                  />
-                  <Bar
-                    dataKey="proteinG"
-                    fill={CHART.protein}
-                    radius={[3, 3, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-              <p className="mt-1 text-center text-[11px] uppercase tracking-[0.12em] text-[var(--muted)]">
-                Protein · floor {proteinFloor}g
-              </p>
-            </div>
+                      <YAxis
+                        stroke={CHART.axis}
+                        tick={{ fill: CHART.axis, fontSize: 11 }}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          background: "#16161a",
+                          border: "1px solid rgba(255,255,255,0.1)",
+                          borderRadius: 8,
+                        }}
+                      />
+                      <ReferenceLine
+                        y={calorieTarget}
+                        stroke={CHART.calOk}
+                        strokeDasharray="4 4"
+                      />
+                      <Bar dataKey="calories" radius={[3, 3, 0, 0]}>
+                        {week.map((d) => (
+                          <Cell
+                            key={d.date}
+                            fill={
+                              d.empty
+                                ? "rgba(255,255,255,0.08)"
+                                : d.calories <= calorieTarget
+                                  ? CHART.calOk
+                                  : CHART.calOver
+                            }
+                          />
+                        ))}
+                        <LabelList
+                          dataKey="calories"
+                          position="top"
+                          formatter={(v) =>
+                            Number(v) > 0 ? formatNumber(Number(v)) : ""
+                          }
+                          style={{ fill: CHART.axis, fontSize: 10 }}
+                        />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                  <p className="mt-1 text-center text-[11px] uppercase tracking-[0.12em] text-[var(--muted)]">
+                    Calories · target {formatNumber(calorieTarget)}
+                  </p>
+                </div>
+                <div className="h-56">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={week} margin={{ top: 18, right: 8, left: 0, bottom: 0 }}>
+                      <CartesianGrid stroke={CHART.grid} vertical={false} />
+                      <XAxis
+                        dataKey="date"
+                        tickFormatter={(d) => format(parseISO(d), "EEE d")}
+                        stroke={CHART.axis}
+                        tick={{ fill: CHART.axis, fontSize: 11 }}
+                        tickLine={false}
+                      />
+                      <YAxis
+                        stroke={CHART.axis}
+                        tick={{ fill: CHART.axis, fontSize: 11 }}
+                        tickLine={false}
+                        axisLine={false}
+                        domain={[0, Math.max(proteinFloor * 1.15, 120)]}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          background: "#16161a",
+                          border: "1px solid rgba(255,255,255,0.1)",
+                          borderRadius: 8,
+                        }}
+                      />
+                      <ReferenceLine
+                        y={proteinFloor}
+                        stroke={CHART.protein}
+                        strokeDasharray="4 4"
+                      />
+                      <Bar dataKey="proteinG" radius={[3, 3, 0, 0]}>
+                        {week.map((d) => (
+                          <Cell
+                            key={d.date}
+                            fill={
+                              d.empty
+                                ? "rgba(255,255,255,0.08)"
+                                : CHART.protein
+                            }
+                          />
+                        ))}
+                        <LabelList
+                          dataKey="proteinG"
+                          position="top"
+                          formatter={(v) =>
+                            Number(v) > 0 ? formatNumber(Number(v), 0) : ""
+                          }
+                          style={{ fill: CHART.axis, fontSize: 10 }}
+                        />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                  <p className="mt-1 text-center text-[11px] uppercase tracking-[0.12em] text-[var(--muted)]">
+                    Protein · floor {proteinFloor}g
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <Empty hint="Log meals for a few days to unlock weekly charts." />
+            )}
+          </section>
+
+          <div className="animate-rise" style={{ animationDelay: "0.05s" }}>
+            <IntakeRidgePlot
+              daily={daily}
+              proteinFloor={proteinFloor}
+              calorieTarget={calorieTarget}
+              phaseLabel={phase}
+            />
           </div>
-        ) : (
-          <Empty hint="Log meals for a few days to unlock weekly charts." />
-        )}
-      </section>
 
-      <div className="animate-rise" style={{ animationDelay: "0.05s" }}>
-        <IntakeRidgePlot
-          daily={daily}
-          proteinFloor={proteinFloor}
-          calorieTarget={calorieTarget}
-          phaseLabel={phase}
-        />
-      </div>
+          <div className="animate-rise" style={{ animationDelay: "0.1s" }}>
+            <BodyRecompChart data={recomp} />
+          </div>
 
-      <div className="animate-rise" style={{ animationDelay: "0.1s" }}>
-        <BodyRecompChart data={recomp} />
-      </div>
-
-      <div className="animate-rise" style={{ animationDelay: "0.14s" }}>
-        <CaloriesProteinJoint
-          daily={daily}
-          calorieTarget={calorieTarget}
-          proteinFloor={proteinFloor}
-          maintenance={maintenance}
-        />
-      </div>
+          <div className="animate-rise" style={{ animationDelay: "0.14s" }}>
+            <CaloriesProteinJoint
+              daily={daily}
+              calorieTarget={calorieTarget}
+              proteinFloor={proteinFloor}
+              maintenance={maintenance}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 }

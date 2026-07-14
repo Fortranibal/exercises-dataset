@@ -45,13 +45,38 @@ export function CaloriesProteinJoint({
       daily.map((d) => ({
         ...d,
         color: monthColor(d.month, months),
-        monthLabel: format(parseISO(`${d.month}-01`), "MMM"),
       })),
     [daily, months],
   );
 
-  const calHist = useMemo(() => histogram(daily.map((d) => d.calories), 12), [daily]);
-  const proHist = useMemo(() => histogram(daily.map((d) => d.proteinG), 10), [daily]);
+  const xMax = useMemo(
+    () =>
+      Math.max(
+        calorieTarget * 1.25,
+        maintenance * 1.1,
+        ...points.map((p) => p.calories),
+        2200,
+      ),
+    [points, calorieTarget, maintenance],
+  );
+  const yMax = useMemo(
+    () => Math.max(proteinFloor * 1.35, ...points.map((p) => p.proteinG), 180),
+    [points, proteinFloor],
+  );
+
+  const calHist = useMemo(
+    () => histogram(daily.map((d) => d.calories), 14, 0, xMax),
+    [daily, xMax],
+  );
+  const proHist = useMemo(
+    () => histogram(daily.map((d) => d.proteinG), 12, 0, yMax),
+    [daily, yMax],
+  );
+
+  const showMaintenance =
+    Math.abs(maintenance - calorieTarget) / Math.max(calorieTarget, 1) > 0.045;
+
+  const ellipse = useMemo(() => densityEllipse(points), [points]);
 
   if (points.length === 0) {
     return (
@@ -61,8 +86,8 @@ export function CaloriesProteinJoint({
     );
   }
 
-  const xMax = Math.max(calorieTarget * 1.35, ...points.map((p) => p.calories), maintenance);
-  const yMax = Math.max(proteinFloor * 1.4, ...points.map((p) => p.proteinG));
+  const xDomainMax = Math.ceil(xMax / 100) * 100;
+  const yDomainMax = Math.ceil(yMax / 10) * 10;
 
   return (
     <section className="chart-panel overflow-hidden">
@@ -71,45 +96,57 @@ export function CaloriesProteinJoint({
           Calories vs protein
         </h2>
         <p className="mt-2 text-[13px] text-[var(--muted)]">
-          Every logged day · density jointplot, coloured by month. Days drift
-          toward higher-calorie / lower-protein; the goal is the green upper-left
-          quadrant.
+          Every logged day · density jointplot, coloured by month. The goal is
+          the green upper-left quadrant (lean &amp; controlled).
         </p>
       </div>
 
-      <div className="grid grid-cols-[1fr_56px] grid-rows-[56px_1fr] gap-0 p-3 md:p-5">
-        {/* Top marginal */}
-        <div className="relative col-start-1 row-start-1">
-          <MarginalBars data={calHist} horizontal max={xMax} color="#5b8def" />
+      <div className="grid grid-cols-[minmax(0,1fr)_52px_28px] grid-rows-[48px_minmax(0,1fr)] gap-x-1 p-3 md:grid-cols-[minmax(0,1fr)_56px_36px] md:p-5">
+        <div className="relative col-start-1 row-start-1 pl-12">
+          <MarginalBars data={calHist} horizontal max={xDomainMax} color="#5b8def" />
         </div>
-        <div className="col-start-2 row-start-1" />
 
-        {/* Main scatter */}
-        <div className="relative col-start-1 row-start-2 h-[360px] md:h-[420px]">
-          <div className="pointer-events-none absolute inset-x-10 top-3 z-10 flex justify-between text-[10px] font-medium uppercase tracking-[0.12em]">
+        <div className="relative col-start-1 row-start-2 h-[360px] md:h-[440px]">
+          <div className="pointer-events-none absolute inset-x-12 top-2 z-10 flex justify-between text-[10px] font-medium uppercase tracking-[0.12em]">
             <span className="text-[#9fe870]">lean &amp; controlled</span>
             <span className="text-[var(--muted)]">high cal, high protein</span>
           </div>
-          <div className="pointer-events-none absolute inset-x-10 bottom-12 z-10 flex justify-between text-[10px] font-medium uppercase tracking-[0.12em]">
+          <div className="pointer-events-none absolute inset-x-12 bottom-11 z-10 flex justify-between text-[10px] font-medium uppercase tracking-[0.12em]">
             <span className="text-[var(--muted)]">low everything</span>
             <span className="text-[#f07178]">high cal, low protein</span>
           </div>
 
+          {ellipse ? (
+            <div
+              className="pointer-events-none absolute z-[1] rounded-[50%] border border-white/20"
+              style={{
+                left: `${8 + (ellipse.cx / xDomainMax) * 84 - (ellipse.rx / xDomainMax) * 84}%`,
+                bottom: `${14 + (ellipse.cy / yDomainMax) * 72 - (ellipse.ry / yDomainMax) * 72}%`,
+                width: `${(ellipse.rx / xDomainMax) * 168}%`,
+                height: `${(ellipse.ry / yDomainMax) * 144}%`,
+                opacity: 0.35,
+                boxShadow:
+                  "0 0 0 12px rgba(255,255,255,0.04), 0 0 0 28px rgba(255,255,255,0.025)",
+              }}
+              aria-hidden
+            />
+          ) : null}
+
           <ResponsiveContainer width="100%" height="100%">
-            <ScatterChart margin={{ top: 28, right: 12, bottom: 20, left: 8 }}>
+            <ScatterChart margin={{ top: 28, right: 8, bottom: 28, left: 12 }}>
               <CartesianGrid stroke={CHART.grid} />
               <XAxis
                 type="number"
                 dataKey="calories"
-                name="kcal"
-                domain={[0, Math.ceil(xMax / 100) * 100]}
+                name="calories"
+                domain={[0, xDomainMax]}
                 stroke={CHART.axis}
                 tick={{ fill: CHART.axis, fontSize: 11 }}
                 tickLine={false}
                 label={{
                   value: "Calories (kcal)",
                   position: "insideBottom",
-                  offset: -8,
+                  offset: -14,
                   fill: CHART.muted,
                   fontSize: 11,
                 }}
@@ -117,8 +154,8 @@ export function CaloriesProteinJoint({
               <YAxis
                 type="number"
                 dataKey="proteinG"
-                name="protein"
-                domain={[0, Math.ceil(yMax / 10) * 10]}
+                name="proteinG"
+                domain={[0, yDomainMax]}
                 stroke={CHART.axis}
                 tick={{ fill: CHART.axis, fontSize: 11 }}
                 tickLine={false}
@@ -130,7 +167,7 @@ export function CaloriesProteinJoint({
                   fontSize: 11,
                 }}
               />
-              <ZAxis range={[55, 55]} />
+              <ZAxis range={[52, 52]} />
               <Tooltip
                 cursor={{ strokeDasharray: "3 3" }}
                 contentStyle={{
@@ -161,17 +198,19 @@ export function CaloriesProteinJoint({
                   position: "insideTopLeft",
                 }}
               />
-              <ReferenceLine
-                x={maintenance}
-                stroke={CHART.maintenance}
-                strokeDasharray="2 4"
-                label={{
-                  value: `${formatNumber(maintenance)} maintenance`,
-                  fill: CHART.maintenance,
-                  fontSize: 10,
-                  position: "insideTopRight",
-                }}
-              />
+              {showMaintenance ? (
+                <ReferenceLine
+                  x={maintenance}
+                  stroke={CHART.maintenance}
+                  strokeDasharray="2 4"
+                  label={{
+                    value: `${formatNumber(maintenance)} maint.`,
+                    fill: CHART.maintenance,
+                    fontSize: 10,
+                    position: "insideBottomRight",
+                  }}
+                />
+              ) : null}
               <ReferenceLine
                 y={proteinFloor}
                 stroke={CHART.protein}
@@ -180,10 +219,10 @@ export function CaloriesProteinJoint({
                   value: `${proteinFloor}g protein floor`,
                   fill: CHART.protein,
                   fontSize: 10,
-                  position: "insideTopLeft",
+                  position: "right",
                 }}
               />
-              <Scatter data={points}>
+              <Scatter data={points} isAnimationActive animationDuration={700}>
                 {points.map((d) => (
                   <Cell key={d.date} fill={d.color} fillOpacity={0.9} />
                 ))}
@@ -192,13 +231,37 @@ export function CaloriesProteinJoint({
           </ResponsiveContainer>
         </div>
 
-        {/* Right marginal */}
-        <div className="relative col-start-2 row-start-2">
-          <MarginalBars data={proHist} horizontal={false} max={yMax} color="#9b3de8" />
+        <div className="relative col-start-2 row-start-2 pb-8 pt-6">
+          <MarginalBars
+            data={proHist}
+            horizontal={false}
+            max={yDomainMax}
+            color="#9b3de8"
+          />
+        </div>
+
+        <div className="col-start-3 row-start-2 flex flex-col items-center gap-2 pb-8 pt-6">
+          <div
+            className="w-2.5 flex-1 rounded-full"
+            style={{
+              background: `linear-gradient(180deg, ${months
+                .map((m) => monthColor(m, months))
+                .join(", ")})`,
+            }}
+          />
+          <div className="flex w-full flex-col justify-between text-center text-[9px] leading-tight text-[var(--muted)]">
+            <span>
+              {months[0] ? format(parseISO(`${months[0]}-01`), "MMM") : ""}
+            </span>
+            <span className="mt-2">
+              {months.length
+                ? format(parseISO(`${months[months.length - 1]}-01`), "MMM")
+                : ""}
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Month legend */}
       <div className="flex flex-wrap items-center gap-3 border-t border-white/6 px-5 py-3 md:px-7">
         <span className="text-[11px] uppercase tracking-[0.12em] text-[var(--muted)]">
           Month
@@ -217,14 +280,37 @@ export function CaloriesProteinJoint({
   );
 }
 
-function histogram(values: number[], bins: number) {
-  if (values.length === 0) return [] as { mid: number; count: number }[];
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const span = Math.max(1, max - min);
+function densityEllipse(points: { calories: number; proteinG: number }[]) {
+  if (points.length < 6) return null;
+  const cx = points.reduce((s, p) => s + p.calories, 0) / points.length;
+  const cy = points.reduce((s, p) => s + p.proteinG, 0) / points.length;
+  let vx = 0;
+  let vy = 0;
+  for (const p of points) {
+    vx += (p.calories - cx) ** 2;
+    vy += (p.proteinG - cy) ** 2;
+  }
+  vx /= points.length;
+  vy /= points.length;
+  return {
+    cx,
+    cy,
+    rx: Math.sqrt(vx) * 1.75,
+    ry: Math.sqrt(vy) * 1.75,
+  };
+}
+
+function histogram(values: number[], bins: number, min: number, max: number) {
+  if (values.length === 0 || max <= min) {
+    return [] as { mid: number; count: number }[];
+  }
+  const span = max - min;
   const counts = Array.from({ length: bins }, () => 0);
   for (const v of values) {
-    const i = Math.min(bins - 1, Math.floor(((v - min) / span) * bins));
+    const i = Math.min(
+      bins - 1,
+      Math.max(0, Math.floor(((v - min) / span) * bins)),
+    );
     counts[i] += 1;
   }
   return counts.map((count, i) => ({
@@ -249,31 +335,33 @@ function MarginalBars({
     <svg viewBox="0 0 100 100" className="h-full w-full" preserveAspectRatio="none">
       {data.map((d) => {
         const t = d.mid / max;
-        const h = (d.count / peak) * 90;
+        const h = (d.count / peak) * 88;
         if (horizontal) {
-          const x = Math.min(95, Math.max(2, t * 100));
+          const x = Math.min(96, Math.max(1, t * 100));
           return (
             <rect
               key={d.mid}
-              x={x - 2}
+              x={x - 2.2}
               y={100 - h}
-              width={3.5}
+              width={4}
               height={h}
               fill={color}
-              opacity={0.55}
+              opacity={0.5}
+              rx={0.5}
             />
           );
         }
-        const y = 100 - Math.min(95, Math.max(2, t * 100));
+        const y = 100 - Math.min(96, Math.max(1, t * 100));
         return (
           <rect
             key={d.mid}
             x={0}
-            y={y - 2}
+            y={y - 2.2}
             width={h}
-            height={3.5}
+            height={4}
             fill={color}
-            opacity={0.55}
+            opacity={0.5}
+            rx={0.5}
           />
         );
       })}

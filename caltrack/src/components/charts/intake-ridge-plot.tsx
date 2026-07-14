@@ -164,7 +164,7 @@ function RidgeColumn({
   borderLeft?: boolean;
 }) {
   const width = 640;
-  const rowH = 62;
+  const rowH = 52;
   const topPad = 40;
   const bottomPad = 40;
   const leftPad = 64;
@@ -197,7 +197,6 @@ function RidgeColumn({
         role="img"
         aria-label={title}
       >
-        {/* Reference line */}
         <line
           x1={refPx}
           x2={refPx}
@@ -221,20 +220,14 @@ function RidgeColumn({
 
         {[...ridges].reverse().map((ridge, revIdx) => {
           const idx = ridges.length - 1 - revIdx;
-          const baseline = topPad + idx * rowH + rowH * 0.72;
-          const amp = rowH * 0.85;
-          const pts = ridge.density
-            .filter((d) => d.x >= xMin && d.x <= xMax)
-            .map((d) => {
-              const px = xScale(d.x);
-              const py = baseline - (d.y / maxDensity) * amp;
-              return `${px},${py}`;
-            });
-          const firstX = xScale(Math.max(xMin, ridge.density[0]?.x ?? xMin));
-          const lastX = xScale(
-            Math.min(xMax, ridge.density[ridge.density.length - 1]?.x ?? xMax),
+          const baseline = topPad + idx * rowH + rowH * 0.78;
+          const amp = rowH * 1.05;
+          const filtered = ridge.density.filter(
+            (d) => d.x >= xMin && d.x <= xMax,
           );
-          const path = `M${firstX},${baseline} L${pts.join(" L")} L${lastX},${baseline} Z`;
+          const path = smoothRidgePath(filtered, xScale, baseline, maxDensity, amp);
+          const firstX = xScale(filtered[0]?.x ?? xMin);
+          const lastX = xScale(filtered[filtered.length - 1]?.x ?? xMax);
 
           return (
             <g key={ridge.month}>
@@ -247,16 +240,24 @@ function RidgeColumn({
                 strokeWidth={1}
               />
               <path
-                d={path}
+                d={`${path} L${lastX},${baseline} L${firstX},${baseline} Z`}
                 fill={ridge.color}
-                fillOpacity={0.55}
+                fillOpacity={0.52}
                 stroke={ridge.color}
-                strokeWidth={1.2}
+                strokeWidth={1.35}
                 strokeOpacity={0.95}
-              />
+              >
+                <animate
+                  attributeName="fill-opacity"
+                  from="0"
+                  to="0.52"
+                  dur="0.7s"
+                  fill="freeze"
+                />
+              </path>
               <text
                 x={12}
-                y={baseline - 10}
+                y={baseline - 12}
                 fill={CHART.title}
                 fontSize={13}
                 fontFamily="var(--font-body), sans-serif"
@@ -266,7 +267,7 @@ function RidgeColumn({
               </text>
               <text
                 x={12}
-                y={baseline + 6}
+                y={baseline + 4}
                 fill={CHART.muted}
                 fontSize={11}
                 fontFamily="var(--font-body), sans-serif"
@@ -277,7 +278,6 @@ function RidgeColumn({
           );
         })}
 
-        {/* X axis */}
         {ticks.map((t) => (
           <g key={t}>
             <line
@@ -303,4 +303,32 @@ function RidgeColumn({
       </svg>
     </div>
   );
+}
+
+function smoothRidgePath(
+  density: { x: number; y: number }[],
+  xScale: (x: number) => number,
+  baseline: number,
+  maxDensity: number,
+  amp: number,
+): string {
+  if (density.length === 0) return "";
+  const pts = density.map((d) => ({
+    x: xScale(d.x),
+    y: baseline - (d.y / maxDensity) * amp,
+  }));
+  if (pts.length === 1) return `M${pts[0].x},${pts[0].y}`;
+  let d = `M${pts[0].x},${pts[0].y}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i === 0 ? i : i - 1];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[i + 2] ?? p2;
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const cp1y = p1.y + (p2.y - p0.y) / 6;
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const cp2y = p2.y - (p3.y - p1.y) / 6;
+    d += ` C${cp1x},${cp1y} ${cp2x},${cp2y} ${p2.x},${p2.y}`;
+  }
+  return d;
 }

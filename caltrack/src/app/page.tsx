@@ -217,11 +217,11 @@ export default function TodayPage() {
         />
         <div className="relative flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-[#7a9a82]">
+            <p className="text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
               {format(new Date(), "EEE d MMM")}
             </p>
             <h1 className="font-display mt-1 text-4xl tracking-tight text-[#f4f4f5] md:text-5xl">
-              Forge
+              Today
             </h1>
             <p className="mt-2 max-w-md text-[var(--muted)]">
               Snap a plate or describe it — Grok estimates the macros.

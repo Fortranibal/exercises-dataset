@@ -29,12 +29,20 @@ export function AppNav() {
   return (
     <header className="sticky top-0 z-40 border-b border-white/[0.06] bg-[#08080a]/90 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-        <Link href="/" className="group flex items-baseline gap-2.5">
-          <span className="font-display text-[1.65rem] tracking-tight text-[#f4f4f5]">
-            Forge
+        <Link href="/" className="group flex items-center gap-2.5">
+          <span
+            className="flex h-8 w-8 items-center justify-center rounded-md bg-[#c8f07a] text-[#101208] shadow-[0_0_24px_rgba(200,240,122,0.25)] transition group-hover:scale-[1.03]"
+            aria-hidden
+          >
+            <Flame className="h-4 w-4" strokeWidth={2.4} />
           </span>
-          <span className="hidden text-[10px] font-medium uppercase tracking-[0.22em] text-[#8b8b96] sm:inline">
-            train · fuel · track
+          <span className="flex items-baseline gap-2.5">
+            <span className="font-display text-[1.65rem] tracking-tight text-[#f4f4f5]">
+              Forge
+            </span>
+            <span className="hidden text-[10px] font-medium uppercase tracking-[0.22em] text-[#8b8b96] sm:inline">
+              train · fuel · track
+            </span>
           </span>
         </Link>
         <nav className="hidden items-center gap-0.5 md:flex">
