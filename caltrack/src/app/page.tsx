@@ -40,6 +40,7 @@ export default function TodayPage() {
   const today = format(new Date(), "yyyy-MM-dd");
   const [meals, setMeals] = useState<Meal[]>([]);
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
+  const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,14 +60,18 @@ export default function TodayPage() {
   } | null>(null);
 
   const load = useCallback(async () => {
-    const [mRes, pRes] = await Promise.all([
-      fetch(`/api/meals?date=${today}`),
-      fetch("/api/profile"),
-    ]);
-    const mJson = await mRes.json();
-    const pJson = await pRes.json();
-    setMeals(mJson.meals ?? []);
-    setProfile(pJson);
+    try {
+      const [mRes, pRes] = await Promise.all([
+        fetch(`/api/meals?date=${today}`),
+        fetch("/api/profile"),
+      ]);
+      const mJson = await mRes.json();
+      const pJson = await pRes.json();
+      setMeals(mJson.meals ?? []);
+      setProfile(pJson);
+    } finally {
+      setLoading(false);
+    }
   }, [today]);
 
   useEffect(() => {
@@ -89,17 +94,24 @@ export default function TodayPage() {
   const calorieTarget =
     profile?.profile.calorieTarget ??
     profile?.mmp.macros.targetKcal ??
-    1900;
+    null;
   const proteinTarget =
-    profile?.profile.proteinTarget ?? profile?.mmp.macros.proteinG ?? 150;
+    profile?.profile.proteinTarget ?? profile?.mmp.macros.proteinG ?? null;
   const maintenance =
     profile?.profile.maintenanceKcal ??
     profile?.mmp.macros.realExpenditure ??
-    2400;
+    null;
 
-  const calPct = Math.min(100, (totals.calories / calorieTarget) * 100);
-  const proteinPct = Math.min(100, (totals.proteinG / proteinTarget) * 100);
-  const underTarget = totals.calories <= calorieTarget;
+  const calPct =
+    calorieTarget && calorieTarget > 0
+      ? Math.min(100, (totals.calories / calorieTarget) * 100)
+      : 0;
+  const proteinPct =
+    proteinTarget && proteinTarget > 0
+      ? Math.min(100, (totals.proteinG / proteinTarget) * 100)
+      : 0;
+  const underTarget =
+    calorieTarget == null ? true : totals.calories <= calorieTarget;
 
   async function onFile(file: File | null) {
     if (!file) {
@@ -218,6 +230,7 @@ export default function TodayPage() {
           <button
             type="button"
             className="btn btn-primary"
+            data-testid="log-meal-open"
             onClick={() => setOpen(true)}
           >
             <Plus className="h-4 w-4" />
@@ -232,14 +245,21 @@ export default function TodayPage() {
                 className="font-display text-3xl tabular-nums md:text-4xl"
                 style={{ color: underTarget ? "var(--accent)" : "var(--warn)" }}
               >
-                {formatNumber(Math.round(totals.calories))}
+                {loading ? "…" : formatNumber(Math.round(totals.calories))}
                 <span className="text-lg text-[#7a9a82]">
                   {" "}
-                  / {formatNumber(calorieTarget)} kcal
+                  /{" "}
+                  {calorieTarget != null
+                    ? formatNumber(calorieTarget)
+                    : "—"}{" "}
+                  kcal
                 </span>
               </p>
               <p className="text-sm text-[#8a9e90]">
-                deficit {formatNumber(Math.round(maintenance - totals.calories))}
+                deficit{" "}
+                {maintenance != null
+                  ? formatNumber(Math.round(maintenance - totals.calories))
+                  : "—"}
               </p>
             </div>
             <div className="progress-track mt-3">
@@ -252,18 +272,26 @@ export default function TodayPage() {
               />
             </div>
             <div className="mt-2 flex justify-between text-xs text-[#7a9a82]">
-              <span>target {formatNumber(calorieTarget)}</span>
-              <span>maintenance {formatNumber(maintenance)}</span>
+              <span>
+                target{" "}
+                {calorieTarget != null ? formatNumber(calorieTarget) : "—"}
+              </span>
+              <span>
+                maintenance{" "}
+                {maintenance != null ? formatNumber(maintenance) : "—"}
+              </span>
             </div>
           </div>
           <div>
             <p className="text-sm text-[#9aada0]">
               <span className="font-semibold text-[var(--protein)]">
-                {formatNumber(Math.round(totals.proteinG))} g protein
+                {loading ? "…" : formatNumber(Math.round(totals.proteinG))} g
+                protein
               </span>
               <span className="text-[#7a9a82]">
                 {" "}
-                · goal {formatNumber(proteinTarget)} g
+                · goal{" "}
+                {proteinTarget != null ? formatNumber(proteinTarget) : "—"} g
               </span>
             </p>
             <div className="progress-track mt-3">
@@ -285,7 +313,9 @@ export default function TodayPage() {
       </section>
 
       <section className="animate-rise space-y-4" style={{ animationDelay: "0.08s" }}>
-        {grouped.map(({ type, items }) =>
+        {loading ? (
+          <div className="panel p-8 text-center text-[#8a9e90]">Loading today’s meals…</div>
+        ) : grouped.map(({ type, items }) =>
           items.length === 0 ? null : (
             <div key={type} className="panel p-4">
               <h2 className="mb-3 text-xs uppercase tracking-[0.16em] text-[#7a9a82]">
@@ -362,7 +392,7 @@ export default function TodayPage() {
             </div>
           ),
         )}
-        {meals.length === 0 ? (
+        {!loading && meals.length === 0 ? (
           <div className="panel p-8 text-center text-[#8a9e90]">
             No meals yet today. Log your first plate to start the day.
           </div>
@@ -421,10 +451,12 @@ export default function TodayPage() {
                 <label htmlFor="desc">Description</label>
                 <textarea
                   id="desc"
+                  name="description"
                   rows={3}
                   placeholder="e.g. beef stir-fry with rice, ~250g cooked, olive oil"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
+                  aria-label="Description"
                 />
               </div>
 
@@ -441,6 +473,27 @@ export default function TodayPage() {
                 )}
                 Analyze with Grok
               </button>
+
+              {!draft ? (
+                <button
+                  type="button"
+                  className="btn btn-ghost w-full"
+                  disabled={busy || (!preview && !description.trim())}
+                  onClick={() =>
+                    setDraft({
+                      name: description.trim().slice(0, 80) || "Meal",
+                      quantity: "",
+                      calories: 0,
+                      proteinG: 0,
+                      carbsG: 0,
+                      fatG: 0,
+                      mealType,
+                    })
+                  }
+                >
+                  Enter macros manually
+                </button>
+              ) : null}
 
               {error ? (
                 <p className="rounded-lg border border-[var(--danger)]/40 bg-[var(--danger)]/10 px-3 py-2 text-sm text-[#f0c0c0]">

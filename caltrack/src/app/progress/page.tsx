@@ -285,7 +285,7 @@ export default function ProgressPage() {
                 <YAxis
                   stroke="#7a9a82"
                   fontSize={11}
-                  domain={["dataMin - 2", "dataMax + 2"]}
+                  domain={[0, "auto"]}
                   label={{
                     value: "Body mass (kg)",
                     angle: -90,

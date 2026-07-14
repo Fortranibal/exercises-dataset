@@ -17,11 +17,11 @@ function savePhoto(dataUrl: string | undefined | null): string | null {
       ? "webp"
       : "jpg";
   const buf = Buffer.from(match[2], "base64");
-  const dir = path.join(process.cwd(), "public", "uploads", "meals");
+  const dir = path.join(process.cwd(), "data", "uploads", "meals");
   fs.mkdirSync(dir, { recursive: true });
   const filename = `${Date.now()}-${randomUUID().slice(0, 8)}.${ext}`;
   fs.writeFileSync(path.join(dir, filename), buf);
-  return `/uploads/meals/${filename}`;
+  return `/api/uploads/meals/${filename}`;
 }
 
 export async function GET(req: NextRequest) {

@@ -3,6 +3,7 @@ node_modules/
 .next/
 data/*.sqlite
 data/*.sqlite-*
+data/uploads/
 public/uploads/**
 !public/uploads/.gitkeep
 .env
