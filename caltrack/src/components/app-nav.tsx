@@ -54,7 +54,7 @@ export function AppNav() {
                 key={href}
                 href={href}
                 className={cn(
-                  "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm transition",
+                  "relative flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm transition",
                   active
                     ? "bg-white/[0.08] text-[#c8f07a]"
                     : "text-[#9a9aa6] hover:bg-white/[0.04] hover:text-[#f4f4f5]",
@@ -62,6 +62,9 @@ export function AppNav() {
               >
                 <Icon className="h-3.5 w-3.5" />
                 {label}
+                {active ? (
+                  <span className="absolute inset-x-2 -bottom-0.5 h-px bg-[#c8f07a]/70" />
+                ) : null}
               </Link>
             );
           })}

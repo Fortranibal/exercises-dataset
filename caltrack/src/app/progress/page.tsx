@@ -22,6 +22,11 @@ import {
 import { BodyRecompChart } from "@/components/charts/body-recomp-chart";
 import { CaloriesProteinJoint } from "@/components/charts/calories-protein-joint";
 import { IntakeRidgePlot } from "@/components/charts/intake-ridge-plot";
+import {
+  averageCalories,
+  proteinHitRate,
+  proteinStreak,
+} from "@/lib/adherence";
 import { CHART } from "@/lib/charts/theme";
 import { formatNumber } from "@/lib/utils";
 
@@ -104,12 +109,34 @@ export default function ProgressPage() {
 
   const hasIntake = daily.length > 0;
 
+  const kpis = useMemo(() => {
+    const avgKcal = averageCalories(daily, 30);
+    const protein = proteinHitRate(daily, proteinFloor, 30);
+    const streak = proteinStreak(
+      daily,
+      proteinFloor,
+      format(new Date(), "yyyy-MM-dd"),
+    );
+    const first = recomp[0];
+    const last = recomp[recomp.length - 1];
+    const weightDelta =
+      first && last ? last.weightKg - first.weightKg : null;
+    const leanDelta =
+      first && last ? last.leanMassKg - first.leanMassKg : null;
+    return { avgKcal, protein, streak, weightDelta, leanDelta };
+  }, [daily, proteinFloor, recomp]);
+
   return (
     <div className="space-y-8">
       <header className="animate-rise">
-        <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--muted)]">
-          Analytics
-        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--muted)]">
+            Analytics
+          </p>
+          <span className="status-chip" data-tone="ok">
+            {phase} phase
+          </span>
+        </div>
         <h1 className="mt-1 font-display text-4xl tracking-tight text-[var(--foreground)] md:text-5xl">
           Progress
         </h1>
@@ -118,6 +145,39 @@ export default function ProgressPage() {
           map — the same lens as your training journal plots.
         </p>
       </header>
+
+      {!loading && hasIntake ? (
+        <section className="animate-rise kpi-grid">
+          <Kpi
+            label="30d avg kcal"
+            value={formatNumber(kpis.avgKcal)}
+            hint={`vs ${formatNumber(calorieTarget)} target`}
+          />
+          <Kpi
+            label="Protein hit rate"
+            value={`${kpis.protein.pct}%`}
+            hint={`${kpis.protein.hits}/${kpis.protein.logged} days · ${kpis.streak}d streak`}
+          />
+          <Kpi
+            label="Weight Δ"
+            value={
+              kpis.weightDelta == null
+                ? "—"
+                : `${kpis.weightDelta >= 0 ? "+" : ""}${formatNumber(kpis.weightDelta, 1)} kg`
+            }
+            hint="Across body logs"
+          />
+          <Kpi
+            label="Lean mass Δ"
+            value={
+              kpis.leanDelta == null
+                ? "—"
+                : `${kpis.leanDelta >= 0 ? "+" : ""}${formatNumber(kpis.leanDelta, 1)} kg`
+            }
+            hint="Recomp signal"
+          />
+        </section>
+      ) : null}
 
       {loading ? (
         <div className="space-y-4">
@@ -291,6 +351,28 @@ function Empty({ hint }: { hint: string }) {
   return (
     <div className="mt-4 rounded-xl border border-dashed border-white/10 px-4 py-12 text-center text-sm text-[var(--muted)]">
       {hint}
+    </div>
+  );
+}
+
+function Kpi({
+  label,
+  value,
+  hint,
+}: {
+  label: string;
+  value: string;
+  hint: string;
+}) {
+  return (
+    <div className="chart-panel px-4 py-3.5">
+      <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-[var(--muted)]">
+        {label}
+      </p>
+      <p className="font-display mt-1 text-2xl tabular-nums text-[#f4f4f5]">
+        {value}
+      </p>
+      <p className="mt-1 text-[11px] text-[var(--muted)]">{hint}</p>
     </div>
   );
 }

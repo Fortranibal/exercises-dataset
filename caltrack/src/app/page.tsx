@@ -2,8 +2,18 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { format } from "date-fns";
-import { Loader2, Plus, Sparkles, Trash2 } from "lucide-react";
+import { addDays, format, isToday, parseISO } from "date-fns";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  Plus,
+  Sparkles,
+  Trash2,
+} from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
+import { MacroRing } from "@/components/macro-ring";
+import { proteinStreak } from "@/lib/adherence";
 import { asMealType, formatNumber, mealTypeLabel } from "@/lib/utils";
 import type { Meal } from "@/lib/db/schema";
 
@@ -36,10 +46,15 @@ function fileToDataUrl(file: File): Promise<string> {
   });
 }
 
+function todayKey() {
+  return format(new Date(), "yyyy-MM-dd");
+}
+
 export default function TodayPage() {
-  const today = format(new Date(), "yyyy-MM-dd");
+  const [date, setDate] = useState(todayKey);
   const [meals, setMeals] = useState<Meal[]>([]);
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
+  const [streak, setStreak] = useState(0);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -59,20 +74,30 @@ export default function TodayPage() {
     notes?: string;
   } | null>(null);
 
+  const viewingToday = isToday(parseISO(date));
+
   const load = useCallback(async () => {
+    setLoading(true);
     try {
-      const [mRes, pRes] = await Promise.all([
-        fetch(`/api/meals?date=${today}`),
+      const [mRes, pRes, sRes] = await Promise.all([
+        fetch(`/api/meals?date=${date}`),
         fetch("/api/profile"),
+        fetch("/api/stats"),
       ]);
       const mJson = await mRes.json();
       const pJson = await pRes.json();
+      const sJson = await sRes.json();
       setMeals(mJson.meals ?? []);
       setProfile(pJson);
+      const proteinFloor =
+        pJson.profile?.proteinTarget ?? pJson.mmp?.macros?.proteinG ?? 150;
+      setStreak(
+        proteinStreak(sJson.daily ?? [], proteinFloor, todayKey()),
+      );
     } finally {
       setLoading(false);
     }
-  }, [today]);
+  }, [date]);
 
   useEffect(() => {
     void load();
@@ -102,16 +127,12 @@ export default function TodayPage() {
     profile?.mmp.macros.realExpenditure ??
     null;
 
-  const calPct =
-    calorieTarget && calorieTarget > 0
-      ? Math.min(100, (totals.calories / calorieTarget) * 100)
-      : 0;
-  const proteinPct =
-    proteinTarget && proteinTarget > 0
-      ? Math.min(100, (totals.proteinG / proteinTarget) * 100)
-      : 0;
   const underTarget =
     calorieTarget == null ? true : totals.calories <= calorieTarget;
+  const proteinHit =
+    proteinTarget != null && totals.proteinG >= proteinTarget;
+  const energyDelta =
+    maintenance != null ? Math.round(maintenance - totals.calories) : null;
 
   async function onFile(file: File | null) {
     if (!file) {
@@ -166,7 +187,7 @@ export default function TodayPage() {
         body: JSON.stringify({
           ...draft,
           description,
-          date: today,
+          date,
           imageDataUrl: preview,
           aiRaw: draft,
         }),
@@ -188,6 +209,12 @@ export default function TodayPage() {
   async function removeMeal(id: string) {
     await fetch(`/api/meals?id=${id}`, { method: "DELETE" });
     await load();
+  }
+
+  function shiftDay(delta: number) {
+    const next = format(addDays(parseISO(date), delta), "yyyy-MM-dd");
+    if (next > todayKey()) return;
+    setDate(next);
   }
 
   const grouped = useMemo(() => {
@@ -212,16 +239,44 @@ export default function TodayPage() {
           className="pointer-events-none absolute inset-0 opacity-40"
           style={{
             backgroundImage:
-              "radial-gradient(circle at 20% 20%, rgba(159,232,112,0.15), transparent 40%), radial-gradient(circle at 80% 0%, rgba(61,214,198,0.12), transparent 35%)",
+              "radial-gradient(circle at 20% 20%, rgba(200,240,122,0.14), transparent 40%), radial-gradient(circle at 80% 0%, rgba(62,207,191,0.1), transparent 35%)",
           }}
         />
         <div className="relative flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
-              {format(new Date(), "EEE d MMM")}
-            </p>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="rounded-md p-1.5 text-[var(--muted)] hover:bg-white/5 hover:text-[#f4f4f5]"
+                onClick={() => shiftDay(-1)}
+                aria-label="Previous day"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <p className="text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
+                {format(parseISO(date), "EEE d MMM")}
+              </p>
+              <button
+                type="button"
+                className="rounded-md p-1.5 text-[var(--muted)] hover:bg-white/5 hover:text-[#f4f4f5] disabled:opacity-30"
+                onClick={() => shiftDay(1)}
+                disabled={viewingToday}
+                aria-label="Next day"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+              {!viewingToday ? (
+                <button
+                  type="button"
+                  className="ml-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--accent)]"
+                  onClick={() => setDate(todayKey())}
+                >
+                  Jump to today
+                </button>
+              ) : null}
+            </div>
             <h1 className="font-display mt-1 text-4xl tracking-tight text-[#f4f4f5] md:text-5xl">
-              Today
+              {viewingToday ? "Today" : format(parseISO(date), "MMM d")}
             </h1>
             <p className="mt-2 max-w-md text-[var(--muted)]">
               Snap a plate or describe it — Grok estimates the macros.
@@ -238,164 +293,194 @@ export default function TodayPage() {
           </button>
         </div>
 
-        <div className="relative mt-8 grid gap-6 md:grid-cols-[1.2fr_0.8fr]">
-          <div>
-            <div className="flex items-baseline justify-between gap-3">
-              <p
-                className="font-display text-3xl tabular-nums md:text-4xl"
-                style={{ color: underTarget ? "var(--accent)" : "var(--warn)" }}
-              >
-                {loading ? "…" : formatNumber(Math.round(totals.calories))}
-                <span className="text-lg text-[#7a9a82]">
-                  {" "}
-                  /{" "}
-                  {calorieTarget != null
-                    ? formatNumber(calorieTarget)
-                    : "—"}{" "}
-                  kcal
-                </span>
-              </p>
-              <p className="text-sm text-[#8a9e90]">
-                deficit{" "}
-                {maintenance != null
-                  ? formatNumber(Math.round(maintenance - totals.calories))
-                  : "—"}
-              </p>
-            </div>
-            <div className="progress-track mt-3">
-              <div
-                className="progress-fill animate-bar"
-                style={{
-                  width: `${calPct}%`,
-                  background: underTarget ? "var(--accent)" : "var(--warn)",
-                }}
-              />
-            </div>
-            <div className="mt-2 flex justify-between text-xs text-[#7a9a82]">
-              <span>
-                target{" "}
-                {calorieTarget != null ? formatNumber(calorieTarget) : "—"}
-              </span>
-              <span>
-                maintenance{" "}
-                {maintenance != null ? formatNumber(maintenance) : "—"}
-              </span>
-            </div>
-          </div>
-          <div>
-            <p className="text-sm text-[#9aada0]">
-              <span className="font-semibold text-[var(--protein)]">
-                {loading ? "…" : formatNumber(Math.round(totals.proteinG))} g
-                protein
-              </span>
-              <span className="text-[#7a9a82]">
-                {" "}
-                · goal{" "}
-                {proteinTarget != null ? formatNumber(proteinTarget) : "—"} g
-              </span>
+        <div className="relative mt-5 flex flex-wrap gap-2">
+          <span
+            className="status-chip"
+            data-tone={underTarget ? "ok" : "warn"}
+          >
+            {calorieTarget == null
+              ? "Target pending"
+              : underTarget
+                ? "On calorie target"
+                : "Over calorie target"}
+          </span>
+          <span
+            className="status-chip"
+            data-tone={proteinHit ? "info" : undefined}
+          >
+            {proteinTarget == null
+              ? "Protein pending"
+              : proteinHit
+                ? "Protein hit"
+                : `${formatNumber(Math.max(0, Math.round((proteinTarget ?? 0) - totals.proteinG)))}g protein left`}
+          </span>
+          {energyDelta != null ? (
+            <span
+              className="status-chip"
+              data-tone={energyDelta >= 0 ? "ok" : "warn"}
+            >
+              {energyDelta >= 0 ? "Deficit" : "Surplus"}{" "}
+              {formatNumber(Math.abs(energyDelta))} kcal
+            </span>
+          ) : null}
+          {streak > 0 ? (
+            <span className="status-chip" data-tone="info">
+              {streak}d protein streak
+            </span>
+          ) : null}
+        </div>
+
+        <div className="relative mt-8 flex flex-wrap items-center justify-center gap-8 sm:justify-start md:gap-12">
+          <MacroRing
+            value={totals.calories}
+            target={calorieTarget}
+            label="Calories"
+            color="var(--accent)"
+            loading={loading}
+          />
+          <MacroRing
+            value={totals.proteinG}
+            target={proteinTarget}
+            label="Protein"
+            unit="g"
+            color="var(--protein)"
+            loading={loading}
+          />
+          <div className="min-w-[9rem] space-y-2 text-sm text-[var(--muted)]">
+            <p>
+              <span className="text-[#f4f4f5]">
+                {loading ? "…" : formatNumber(Math.round(totals.carbsG))}g
+              </span>{" "}
+              carbs
             </p>
-            <div className="progress-track mt-3">
-              <div
-                className="progress-fill animate-bar"
-                style={{
-                  width: `${proteinPct}%`,
-                  background: "var(--protein)",
-                  animationDelay: "0.12s",
-                }}
-              />
-            </div>
-            <p className="mt-3 text-xs text-[#7a9a82]">
-              {meals.length} items · {formatNumber(Math.round(totals.carbsG))} g
-              carbs · {formatNumber(Math.round(totals.fatG))} g fat
+            <p>
+              <span className="text-[#f4f4f5]">
+                {loading ? "…" : formatNumber(Math.round(totals.fatG))}g
+              </span>{" "}
+              fat
             </p>
+            <p>
+              {meals.length} item{meals.length === 1 ? "" : "s"} logged
+            </p>
+            {maintenance != null ? (
+              <p className="text-xs">
+                Maintenance {formatNumber(maintenance)}
+              </p>
+            ) : null}
           </div>
         </div>
       </section>
 
-      <section className="animate-rise space-y-4" style={{ animationDelay: "0.08s" }}>
+      <section
+        className="animate-rise space-y-4"
+        style={{ animationDelay: "0.08s" }}
+      >
         {loading ? (
-          <div className="panel p-8 text-center text-[#8a9e90]">Loading today’s meals…</div>
-        ) : grouped.map(({ type, items }) =>
-          items.length === 0 ? null : (
-            <div key={type} className="panel p-4">
-              <h2 className="mb-3 text-xs uppercase tracking-[0.16em] text-[#7a9a82]">
-                {mealTypeLabel(asMealType(type))}
-              </h2>
-              <ul className="space-y-3">
-                {items.map((m) => {
-                  const share =
-                    totals.calories > 0
-                      ? Math.round((m.calories / totals.calories) * 100)
-                      : 0;
-                  return (
-                    <li
-                      key={m.id}
-                      className="flex items-center gap-3 border-b border-white/5 pb-3 last:border-0 last:pb-0"
-                    >
-                      {m.photoPath ? (
-                        <Image
-                          src={m.photoPath}
-                          alt={m.name}
-                          width={56}
-                          height={56}
-                          className="h-14 w-14 rounded-lg object-cover"
-                          unoptimized
-                        />
-                      ) : (
-                        <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-white/5 text-xs text-[#7a9a82]">
-                          —
-                        </div>
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium text-[#eef5f0]">
-                          {m.name}
-                          {m.quantity ? (
-                            <span className="text-[#7a9a82]">
-                              {" "}
-                              · {m.quantity}
-                            </span>
-                          ) : null}
-                        </p>
-                        <p className="text-xs text-[#7a9a82]">
-                          {m.time ?? "—"} · {share}% of day
-                        </p>
-                        <div className="progress-track mt-1.5 max-w-[12rem]">
-                          <div
-                            className="progress-fill"
-                            style={{
-                              width: `${share}%`,
-                              background: "var(--accent-2)",
-                            }}
-                          />
-                        </div>
-                      </div>
-                      <div className="text-right text-sm tabular-nums">
-                        <p className="text-[var(--protein)]">
-                          {formatNumber(m.proteinG, 0)}g P
-                        </p>
-                        <p className="text-[#cfe0d4]">
-                          {formatNumber(m.calories, 0)} kcal
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        className="rounded-md p-2 text-[#7a9a82] hover:bg-white/5 hover:text-[var(--danger)]"
-                        onClick={() => void removeMeal(m.id)}
-                        aria-label="Delete meal"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ),
-        )}
-        {!loading && meals.length === 0 ? (
-          <div className="panel p-8 text-center text-[#8a9e90]">
-            No meals yet today. Log your first plate to start the day.
+          <div className="panel space-y-3 p-5">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="h-14 animate-pulse rounded-lg bg-white/[0.04]"
+                style={{ animationDelay: `${i * 0.06}s` }}
+              />
+            ))}
           </div>
+        ) : null}
+
+        {!loading &&
+          grouped.map(({ type, items }) =>
+            items.length === 0 ? null : (
+              <div key={type} className="panel p-4">
+                <h2 className="mb-3 text-xs uppercase tracking-[0.16em] text-[var(--muted)]">
+                  {mealTypeLabel(asMealType(type))}
+                </h2>
+                <ul className="space-y-3">
+                  {items.map((m) => {
+                    const share =
+                      totals.calories > 0
+                        ? Math.round((m.calories / totals.calories) * 100)
+                        : 0;
+                    return (
+                      <li
+                        key={m.id}
+                        className="flex items-center gap-3 border-b border-white/5 pb-3 last:border-0 last:pb-0"
+                      >
+                        {m.photoPath ? (
+                          <Image
+                            src={m.photoPath}
+                            alt={m.name}
+                            width={56}
+                            height={56}
+                            className="h-14 w-14 rounded-lg object-cover"
+                            unoptimized
+                          />
+                        ) : (
+                          <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-white/5 text-xs text-[var(--muted)]">
+                            —
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-medium text-[#f4f4f5]">
+                            {m.name}
+                            {m.quantity ? (
+                              <span className="text-[var(--muted)]">
+                                {" "}
+                                · {m.quantity}
+                              </span>
+                            ) : null}
+                          </p>
+                          <p className="text-xs text-[var(--muted)]">
+                            {m.time ?? "—"} · {share}% of day
+                          </p>
+                          <div className="progress-track mt-1.5 max-w-[12rem]">
+                            <div
+                              className="progress-fill"
+                              style={{
+                                width: `${share}%`,
+                                background: "var(--accent-2)",
+                              }}
+                            />
+                          </div>
+                        </div>
+                        <div className="text-right text-sm tabular-nums">
+                          <p className="text-[var(--protein)]">
+                            {formatNumber(m.proteinG, 0)}g P
+                          </p>
+                          <p className="text-[#d4d4d8]">
+                            {formatNumber(m.calories, 0)} kcal
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          className="rounded-md p-2 text-[var(--muted)] hover:bg-white/5 hover:text-[var(--danger)]"
+                          onClick={() => void removeMeal(m.id)}
+                          aria-label="Delete meal"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ),
+          )}
+
+        {!loading && meals.length === 0 ? (
+          <EmptyState
+            title={viewingToday ? "Nothing logged yet" : "No meals this day"}
+            hint="Photo or describe a plate — Grok fills in the macros, or enter them by hand."
+            action={
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => setOpen(true)}
+              >
+                <Plus className="h-4 w-4" />
+                Log meal
+              </button>
+            }
+          />
         ) : null}
       </section>
 
@@ -412,8 +497,9 @@ export default function TodayPage() {
                 Close
               </button>
             </div>
-            <p className="mt-1 text-sm text-[#8a9e90]">
-              Photo and/or description → Grok 4 vision estimates macros.
+            <p className="mt-1 text-sm text-[var(--muted)]">
+              Saving to {format(parseISO(date), "EEE d MMM")} · photo and/or
+              description → Grok estimates macros.
             </p>
 
             <div className="mt-4 space-y-3">
@@ -582,7 +668,7 @@ export default function TodayPage() {
                     </div>
                   </div>
                   {draft.notes ? (
-                    <p className="text-xs text-[#8a9e90]">{draft.notes}</p>
+                    <p className="text-xs text-[var(--muted)]">{draft.notes}</p>
                   ) : null}
                   <button
                     type="button"
