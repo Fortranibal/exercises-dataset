@@ -220,10 +220,10 @@ export default function TodayPage() {
             <p className="text-xs uppercase tracking-[0.18em] text-[#7a9a82]">
               {format(new Date(), "EEE d MMM")}
             </p>
-            <h1 className="font-display mt-1 text-4xl tracking-tight text-[#f2f7f3] md:text-5xl">
-              caltrack
+            <h1 className="font-display mt-1 text-4xl tracking-tight text-[#f4f4f5] md:text-5xl">
+              Forge
             </h1>
-            <p className="mt-2 max-w-md text-[#9aada0]">
+            <p className="mt-2 max-w-md text-[var(--muted)]">
               Snap a plate or describe it — Grok estimates the macros.
             </p>
           </div>

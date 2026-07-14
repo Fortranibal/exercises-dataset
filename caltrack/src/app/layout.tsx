@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Outfit, Fraunces } from "next/font/google";
+import { Outfit, Syne } from "next/font/google";
 import { AppNav } from "@/components/app-nav";
 import "./globals.css";
 
@@ -8,13 +8,14 @@ const outfit = Outfit({
   subsets: ["latin"],
 });
 
-const fraunces = Fraunces({
+const syne = Syne({
   variable: "--font-display",
   subsets: ["latin"],
+  weight: ["500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
-  title: "caltrack — nutrition & physique",
+  title: "Forge — train, fuel, track",
   description:
     "Log meals with Grok vision, track macros, MMP, strength, and physique progress.",
 };
@@ -27,7 +28,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${outfit.variable} ${fraunces.variable} h-full antialiased`}
+      className={`${outfit.variable} ${syne.variable} h-full antialiased`}
     >
       <body className="min-h-full font-sans text-[15px] leading-relaxed">
         <AppNav />

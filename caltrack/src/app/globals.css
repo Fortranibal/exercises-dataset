@@ -1,17 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0f0d;
-  --foreground: #e8f0ea;
-  --muted: #8a9e90;
-  --panel: #121916;
-  --panel-2: #18211c;
+  --background: #08080a;
+  --foreground: #f4f4f5;
+  --muted: #9a9aa6;
+  --panel: #111114;
+  --panel-2: #16161a;
   --line: rgba(255, 255, 255, 0.08);
-  --accent: #9fe870;
-  --accent-2: #3dd6c6;
+  --accent: #c8f07a;
+  --accent-2: #3ecfbf;
   --warn: #e8a87c;
-  --danger: #e07a7a;
-  --protein: #6eb6ff;
+  --danger: #f07178;
+  --protein: #7db4ff;
 }
 
 @theme inline {
@@ -23,21 +23,28 @@
 
 body {
   background:
-    radial-gradient(1200px 600px at 10% -10%, rgba(159, 232, 112, 0.08), transparent 55%),
-    radial-gradient(900px 500px at 90% 0%, rgba(61, 214, 198, 0.07), transparent 50%),
-    linear-gradient(180deg, #0c1411 0%, #0a0f0d 40%, #0b1010 100%);
+    radial-gradient(1000px 520px at 8% -8%, rgba(200, 240, 122, 0.06), transparent 55%),
+    radial-gradient(800px 480px at 92% 0%, rgba(62, 207, 191, 0.05), transparent 50%),
+    linear-gradient(180deg, #0c0c10 0%, #08080a 45%, #070709 100%);
   color: var(--foreground);
   min-height: 100vh;
 }
 
 .font-display {
-  font-family: var(--font-display), ui-serif, Georgia, serif;
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
 }
 
 .panel {
-  background: linear-gradient(160deg, var(--panel-2), var(--panel));
+  background: linear-gradient(165deg, var(--panel-2), var(--panel));
   border: 1px solid var(--line);
   border-radius: 1rem;
+}
+
+.chart-panel {
+  background: #0c0c10;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 .progress-track {
@@ -63,7 +70,7 @@ button {
 input,
 select,
 textarea {
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.4);
   border: 1px solid var(--line);
   border-radius: 0.6rem;
   color: var(--foreground);
@@ -74,7 +81,7 @@ textarea {
 input:focus,
 select:focus,
 textarea:focus {
-  outline: 2px solid rgba(159, 232, 112, 0.35);
+  outline: 2px solid rgba(200, 240, 122, 0.35);
   outline-offset: 1px;
 }
 
@@ -104,7 +111,7 @@ label {
 
 .btn-primary {
   background: var(--accent);
-  color: #0b140e;
+  color: #101208;
 }
 
 .btn-primary:hover {
