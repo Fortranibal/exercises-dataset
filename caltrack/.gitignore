@@ -1,0 +1,12 @@
+# caltrack
+node_modules/
+.next/
+data/*.sqlite
+data/*.sqlite-*
+public/uploads/**
+!public/uploads/.gitkeep
+.env
+.env.local
+.env*.local
+*.log
+.DS_Store

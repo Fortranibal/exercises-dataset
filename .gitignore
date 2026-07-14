@@ -3,3 +3,11 @@ __pycache__/
 .DS_Store
 .venv/
 *.zip
+caltrack/node_modules/
+caltrack/.next/
+caltrack/data/*.sqlite
+caltrack/data/*.sqlite-*
+caltrack/public/uploads/**
+!caltrack/public/uploads/.gitkeep
+caltrack/.env
+caltrack/.env.local
