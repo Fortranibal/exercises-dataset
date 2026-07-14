@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import { format, parseISO } from "date-fns";
 import type { StrengthLog } from "@/lib/db/schema";
+import { CHART_TOOLTIP } from "@/lib/charts/theme";
 import { formatNumber } from "@/lib/utils";
 
 const DEFAULT_LIFTS = [
@@ -96,23 +97,23 @@ export default function StrengthPage() {
   }
 
   const colors = [
-    "#9fe870",
-    "#6eb6ff",
-    "#e8a87c",
-    "#3dd6c6",
-    "#c4a574",
-    "#e07a7a",
-    "#b8a1ff",
+    "#c8f07a",
+    "#7db4ff",
+    "#b4e878",
+    "#9ad0a8",
+    "#8ac0cc",
+    "#6aa0e8",
+    "#a8c878",
   ];
 
   return (
     <div className="space-y-6">
       <header className="animate-rise">
-        <p className="text-xs uppercase tracking-[0.18em] text-[#7a9a82]">
+        <p className="text-xs uppercase tracking-[0.18em] text-[var(--mute)]">
           Force
         </p>
-        <h1 className="font-display mt-1 text-4xl">Strength</h1>
-        <p className="mt-2 max-w-xl text-[#9aada0]">
+        <h1 className="font-display mt-1 text-4xl text-[var(--highlight)]">Strength</h1>
+        <p className="mt-2 max-w-xl text-[var(--mute)]">
           Log working sets; we estimate 1RM (Epley) and chart progress over time.
         </p>
       </header>
@@ -180,13 +181,12 @@ export default function StrengthPage() {
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData}>
                 <CartesianGrid stroke="rgba(255,255,255,0.06)" />
-                <XAxis dataKey="label" stroke="#7a9a82" fontSize={11} />
-                <YAxis stroke="#7a9a82" fontSize={11} />
+                <XAxis dataKey="label" stroke="var(--mute)" fontSize={11} />
+                <YAxis stroke="var(--mute)" fontSize={11} />
                 <Tooltip
-                  contentStyle={{
-                    background: "#121916",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                  }}
+                  contentStyle={CHART_TOOLTIP.contentStyle}
+                  labelStyle={CHART_TOOLTIP.labelStyle}
+                  itemStyle={CHART_TOOLTIP.itemStyle}
                 />
                 <Legend />
                 {series.map((ex, i) => (
@@ -204,7 +204,7 @@ export default function StrengthPage() {
             </ResponsiveContainer>
           </div>
         ) : (
-          <p className="mt-4 text-sm text-[#8a9e90]">
+          <p className="mt-4 text-sm text-[var(--mute)]">
             No lifts yet — add your first set above.
           </p>
         )}
@@ -213,7 +213,7 @@ export default function StrengthPage() {
       <section className="animate-rise panel overflow-x-auto p-5" style={{ animationDelay: "0.1s" }}>
         <h2 className="font-display text-xl">Log</h2>
         <table className="mt-3 w-full min-w-[32rem] text-left text-sm">
-          <thead className="text-xs uppercase tracking-wider text-[#7a9a82]">
+          <thead className="text-xs uppercase tracking-wider text-[var(--mute)]">
             <tr>
               <th className="pb-2 pr-3">Date</th>
               <th className="pb-2 pr-3">Exercise</th>
@@ -224,14 +224,14 @@ export default function StrengthPage() {
           <tbody>
             {logs.map((l) => (
               <tr key={l.id} className="border-t border-white/5">
-                <td className="py-2 pr-3 tabular-nums text-[#8a9e90]">
+                <td className="py-2 pr-3 tabular-nums text-[var(--mute)]">
                   {l.date}
                 </td>
                 <td className="py-2 pr-3">{l.exercise}</td>
                 <td className="py-2 pr-3 tabular-nums">
                   {formatNumber(l.weightKg, 1)} × {l.reps}
                 </td>
-                <td className="py-2 pr-3 tabular-nums text-[#9fe870]">
+                <td className="py-2 pr-3 tabular-nums text-[var(--primary)]">
                   {formatNumber(l.estimated1rm ?? l.weightKg, 1)} kg
                 </td>
               </tr>

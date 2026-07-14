@@ -1,29 +1,56 @@
-/** Month color ramp matching the reference ridge plots (green → purple). */
+/** Strict palette: primary · secondary · highlight · mute only. */
+export const PALETTE = {
+  primary: "#c8f07a",
+  secondary: "#7db4ff",
+  highlight: "#f4f4f5",
+  mute: "#9a9aa6",
+} as const;
+
+/** Month ramp stays inside primary → secondary. */
 export const MONTH_RAMP = [
-  "#b8f26d", // early
-  "#3ecfbf",
-  "#3b7ddd",
-  "#5b4fd6",
-  "#9b3de8",
-  "#d946ef",
+  PALETTE.primary,
+  "#b4e878",
+  "#9ad0a8",
+  "#8ac0cc",
+  PALETTE.secondary,
+  "#6aa0e8",
 ] as const;
 
 export const CHART = {
   bg: "#0a0a0c",
   panel: "#111114",
-  grid: "rgba(255,255,255,0.06)",
-  axis: "#8b8b96",
-  title: "#f4f4f5",
-  muted: "#9a9aa6",
-  ref: "#f472b6",
-  lean: "#1a4d3a",
-  leanStroke: "#2d6a4f",
-  fat: "#b8956a",
-  fatStroke: "#c4a574",
-  protein: "#7db4ff",
-  calOk: "#9fe870",
-  calOver: "#f07178",
-  maintenance: "#fbbf24",
+  grid: "rgba(244,244,245,0.06)",
+  axis: PALETTE.mute,
+  title: PALETTE.highlight,
+  muted: PALETTE.mute,
+  ref: PALETTE.secondary,
+  lean: "rgba(200,240,122,0.22)",
+  leanStroke: PALETTE.primary,
+  fat: "rgba(125,180,255,0.22)",
+  fatStroke: PALETTE.secondary,
+  protein: PALETTE.secondary,
+  calOk: PALETTE.primary,
+  /** Over target uses secondary — not a third hue */
+  calOver: PALETTE.secondary,
+  maintenance: PALETTE.mute,
+} as const;
+
+/** Shared dark tooltip — highlight text on dark panel. */
+export const CHART_TOOLTIP = {
+  contentStyle: {
+    background: "#121216",
+    border: "1px solid rgba(244,244,245,0.14)",
+    borderRadius: 8,
+    color: PALETTE.highlight,
+    boxShadow: "0 8px 24px rgba(0,0,0,0.45)",
+  },
+  labelStyle: { color: PALETTE.highlight, fontWeight: 600 },
+  itemStyle: { color: PALETTE.highlight },
+} as const;
+
+/** Subtle bar hover using primary at low opacity. */
+export const CHART_BAR_CURSOR = {
+  fill: "rgba(200, 240, 122, 0.08)",
 } as const;
 
 export function monthColor(monthKey: string, allMonths: string[]): string {

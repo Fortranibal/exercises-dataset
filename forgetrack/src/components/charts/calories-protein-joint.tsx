@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   CartesianGrid,
   Cell,
@@ -14,7 +14,7 @@ import {
   ZAxis,
 } from "recharts";
 import { format, parseISO } from "date-fns";
-import { CHART, monthColor } from "@/lib/charts/theme";
+import { CHART, CHART_TOOLTIP, monthColor, PALETTE } from "@/lib/charts/theme";
 import { formatNumber } from "@/lib/utils";
 
 type Daily = {
@@ -35,6 +35,8 @@ export function CaloriesProteinJoint({
   proteinFloor: number;
   maintenance: number;
 }) {
+  const [hoverMonth, setHoverMonth] = useState<string | null>(null);
+
   const months = useMemo(
     () => Array.from(new Set(daily.map((d) => d.month))).sort(),
     [daily],
@@ -64,73 +66,60 @@ export function CaloriesProteinJoint({
     [points, proteinFloor],
   );
 
+  const xDomainMax = Math.ceil(xMax / 100) * 100;
+  const yDomainMax = Math.ceil(yMax / 10) * 10;
+
   const calHist = useMemo(
-    () => histogram(daily.map((d) => d.calories), 14, 0, xMax),
-    [daily, xMax],
+    () => histogram(daily.map((d) => d.calories), 36, 0, xDomainMax),
+    [daily, xDomainMax],
   );
   const proHist = useMemo(
-    () => histogram(daily.map((d) => d.proteinG), 12, 0, yMax),
-    [daily, yMax],
+    () => histogram(daily.map((d) => d.proteinG), 28, 0, yDomainMax),
+    [daily, yDomainMax],
   );
 
   const showMaintenance =
     Math.abs(maintenance - calorieTarget) / Math.max(calorieTarget, 1) > 0.045;
 
-  const ellipse = useMemo(() => densityEllipse(points), [points]);
-
   if (points.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-white/10 px-4 py-16 text-center text-sm text-[var(--muted)]">
+      <div className="rounded-xl border border-dashed border-white/10 px-4 py-16 text-center text-sm text-[var(--mute)]">
         Log daily meals to populate the joint plot.
       </div>
     );
   }
 
-  const xDomainMax = Math.ceil(xMax / 100) * 100;
-  const yDomainMax = Math.ceil(yMax / 10) * 10;
-
   return (
     <section className="chart-panel overflow-hidden">
       <div className="border-b border-white/6 px-5 pb-4 pt-5 md:px-7">
-        <h2 className="text-[15px] font-semibold uppercase tracking-[0.14em] text-[var(--foreground)] md:text-base">
+        <h2 className="text-[15px] font-semibold uppercase tracking-[0.14em] text-[var(--highlight)] md:text-base">
           Calories vs protein
         </h2>
-        <p className="mt-2 text-[13px] text-[var(--muted)]">
-          Every logged day · density jointplot, coloured by month. The goal is
-          the green upper-left quadrant (lean &amp; controlled).
+        <p className="mt-2 text-[13px] text-[var(--mute)]">
+          Every logged day · hover a point for its date. Goal: upper-left
+          (lean &amp; controlled).
         </p>
       </div>
 
-      <div className="grid grid-cols-[minmax(0,1fr)_52px_28px] grid-rows-[48px_minmax(0,1fr)] gap-x-1 p-3 md:grid-cols-[minmax(0,1fr)_56px_36px] md:p-5">
+      <div className="grid grid-cols-[minmax(0,1fr)_48px] grid-rows-[40px_minmax(0,1fr)] gap-x-1 p-3 md:grid-cols-[minmax(0,1fr)_52px] md:p-5">
         <div className="relative col-start-1 row-start-1 pl-12">
-          <MarginalBars data={calHist} horizontal max={xDomainMax} color="#5b8def" />
+          <MarginalBars
+            data={calHist}
+            horizontal
+            max={xDomainMax}
+            color={PALETTE.secondary}
+          />
         </div>
 
         <div className="relative col-start-1 row-start-2 h-[360px] md:h-[440px]">
           <div className="pointer-events-none absolute inset-x-12 top-2 z-10 flex justify-between text-[10px] font-medium uppercase tracking-[0.12em]">
-            <span className="text-[#9fe870]">lean &amp; controlled</span>
-            <span className="text-[var(--muted)]">high cal, high protein</span>
+            <span className="text-[var(--primary)]">lean &amp; controlled</span>
+            <span className="text-[var(--mute)]">high cal, high protein</span>
           </div>
           <div className="pointer-events-none absolute inset-x-12 bottom-11 z-10 flex justify-between text-[10px] font-medium uppercase tracking-[0.12em]">
-            <span className="text-[var(--muted)]">low everything</span>
-            <span className="text-[#f07178]">high cal, low protein</span>
+            <span className="text-[var(--mute)]">low everything</span>
+            <span className="text-[var(--secondary)]">high cal, low protein</span>
           </div>
-
-          {ellipse ? (
-            <div
-              className="pointer-events-none absolute z-[1] rounded-[50%] border border-white/20"
-              style={{
-                left: `${8 + (ellipse.cx / xDomainMax) * 84 - (ellipse.rx / xDomainMax) * 84}%`,
-                bottom: `${14 + (ellipse.cy / yDomainMax) * 72 - (ellipse.ry / yDomainMax) * 72}%`,
-                width: `${(ellipse.rx / xDomainMax) * 168}%`,
-                height: `${(ellipse.ry / yDomainMax) * 144}%`,
-                opacity: 0.35,
-                boxShadow:
-                  "0 0 0 12px rgba(255,255,255,0.04), 0 0 0 28px rgba(255,255,255,0.025)",
-              }}
-              aria-hidden
-            />
-          ) : null}
 
           <ResponsiveContainer width="100%" height="100%">
             <ScatterChart margin={{ top: 28, right: 8, bottom: 28, left: 12 }}>
@@ -169,23 +158,14 @@ export function CaloriesProteinJoint({
               />
               <ZAxis range={[52, 52]} />
               <Tooltip
-                cursor={{ strokeDasharray: "3 3" }}
-                contentStyle={{
-                  background: "#16161a",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  borderRadius: 8,
+                cursor={{
+                  strokeDasharray: "3 3",
+                  stroke: "rgba(200,240,122,0.35)",
                 }}
-                formatter={(value, name) => [
-                  name === "calories"
-                    ? `${formatNumber(Number(value))} kcal`
-                    : `${formatNumber(Number(value), 0)} g`,
-                  name === "calories" ? "Calories" : "Protein",
-                ]}
-                labelFormatter={(_, payload) =>
-                  payload?.[0]?.payload?.date
-                    ? format(parseISO(payload[0].payload.date), "MMM d yyyy")
-                    : ""
-                }
+                isAnimationActive={false}
+                animationDuration={0}
+                wrapperStyle={{ outline: "none", transition: "none" }}
+                content={<JointTooltip />}
               />
               <ReferenceLine
                 x={calorieTarget}
@@ -223,9 +203,17 @@ export function CaloriesProteinJoint({
                 }}
               />
               <Scatter data={points} isAnimationActive animationDuration={700}>
-                {points.map((d) => (
-                  <Cell key={d.date} fill={d.color} fillOpacity={0.9} />
-                ))}
+                {points.map((d) => {
+                  const dimmed =
+                    hoverMonth != null && d.month !== hoverMonth;
+                  return (
+                    <Cell
+                      key={d.date}
+                      fill={d.color}
+                      fillOpacity={dimmed ? 0.18 : 0.92}
+                    />
+                  );
+                })}
               </Scatter>
             </ScatterChart>
           </ResponsiveContainer>
@@ -236,73 +224,81 @@ export function CaloriesProteinJoint({
             data={proHist}
             horizontal={false}
             max={yDomainMax}
-            color="#9b3de8"
+            color={PALETTE.primary}
           />
-        </div>
-
-        <div className="col-start-3 row-start-2 flex flex-col items-center gap-2 pb-8 pt-6">
-          <div
-            className="w-2.5 flex-1 rounded-full"
-            style={{
-              background: `linear-gradient(180deg, ${months
-                .map((m) => monthColor(m, months))
-                .join(", ")})`,
-            }}
-          />
-          <div className="flex w-full flex-col justify-between text-center text-[9px] leading-tight text-[var(--muted)]">
-            <span>
-              {months[0] ? format(parseISO(`${months[0]}-01`), "MMM") : ""}
-            </span>
-            <span className="mt-2">
-              {months.length
-                ? format(parseISO(`${months[months.length - 1]}-01`), "MMM")
-                : ""}
-            </span>
-          </div>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 border-t border-white/6 px-5 py-3 md:px-7">
-        <span className="text-[11px] uppercase tracking-[0.12em] text-[var(--muted)]">
+      <div className="flex flex-wrap items-center gap-2 border-t border-white/6 px-5 py-3 md:px-7">
+        <span className="mr-1 text-[11px] uppercase tracking-[0.12em] text-[var(--mute)]">
           Month
         </span>
-        {months.map((m) => (
-          <span key={m} className="inline-flex items-center gap-1.5 text-[12px]">
-            <span
-              className="inline-block h-2.5 w-2.5 rounded-full"
-              style={{ background: monthColor(m, months) }}
-            />
-            {format(parseISO(`${m}-01`), "MMM")}
-          </span>
-        ))}
+        {months.map((m) => {
+          const active = hoverMonth === m;
+          const dimmed = hoverMonth != null && !active;
+          return (
+            <button
+              key={m}
+              type="button"
+              className="inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[12px] transition"
+              style={{
+                borderColor: active
+                  ? monthColor(m, months)
+                  : "rgba(244,244,245,0.1)",
+                background: active
+                  ? "rgba(244,244,245,0.06)"
+                  : "transparent",
+                color: dimmed ? PALETTE.mute : PALETTE.highlight,
+                opacity: dimmed ? 0.45 : 1,
+              }}
+              onMouseEnter={() => setHoverMonth(m)}
+              onMouseLeave={() => setHoverMonth(null)}
+              onFocus={() => setHoverMonth(m)}
+              onBlur={() => setHoverMonth(null)}
+            >
+              <span
+                className="inline-block h-2.5 w-2.5 rounded-full"
+                style={{ background: monthColor(m, months) }}
+              />
+              {format(parseISO(`${m}-01`), "MMM")}
+            </button>
+          );
+        })}
       </div>
     </section>
   );
 }
 
-function densityEllipse(points: { calories: number; proteinG: number }[]) {
-  if (points.length < 6) return null;
-  const cx = points.reduce((s, p) => s + p.calories, 0) / points.length;
-  const cy = points.reduce((s, p) => s + p.proteinG, 0) / points.length;
-  let vx = 0;
-  let vy = 0;
-  for (const p of points) {
-    vx += (p.calories - cx) ** 2;
-    vy += (p.proteinG - cy) ** 2;
-  }
-  vx /= points.length;
-  vy /= points.length;
-  return {
-    cx,
-    cy,
-    rx: Math.sqrt(vx) * 1.75,
-    ry: Math.sqrt(vy) * 1.75,
-  };
+function JointTooltip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: Array<{ payload: Daily }>;
+}) {
+  if (!active || !payload?.[0]?.payload) return null;
+  const d = payload[0].payload;
+  return (
+    <div
+      style={CHART_TOOLTIP.contentStyle}
+      className="px-3 py-2 text-sm shadow-lg"
+    >
+      <p style={CHART_TOOLTIP.labelStyle}>
+        {format(parseISO(d.date), "EEE d MMM yyyy")}
+      </p>
+      <p className="mt-1 tabular-nums" style={{ color: PALETTE.primary }}>
+        {formatNumber(d.calories)} kcal
+      </p>
+      <p className="tabular-nums" style={{ color: PALETTE.secondary }}>
+        {formatNumber(d.proteinG, 0)}P
+      </p>
+    </div>
+  );
 }
 
 function histogram(values: number[], bins: number, min: number, max: number) {
   if (values.length === 0 || max <= min) {
-    return [] as { mid: number; count: number }[];
+    return [] as { mid: number; count: number; start: number; end: number }[];
   }
   const span = max - min;
   const counts = Array.from({ length: bins }, () => 0);
@@ -314,6 +310,8 @@ function histogram(values: number[], bins: number, min: number, max: number) {
     counts[i] += 1;
   }
   return counts.map((count, i) => ({
+    start: min + (i / bins) * span,
+    end: min + ((i + 1) / bins) * span,
     mid: min + ((i + 0.5) / bins) * span,
     count,
   }));
@@ -325,43 +323,49 @@ function MarginalBars({
   max,
   color,
 }: {
-  data: { mid: number; count: number }[];
+  data: { mid: number; count: number; start: number; end: number }[];
   horizontal: boolean;
   max: number;
   color: string;
 }) {
   const peak = Math.max(1, ...data.map((d) => d.count));
   return (
-    <svg viewBox="0 0 100 100" className="h-full w-full" preserveAspectRatio="none">
+    <svg
+      viewBox="0 0 100 100"
+      className="h-full w-full"
+      preserveAspectRatio="none"
+    >
       {data.map((d) => {
-        const t = d.mid / max;
-        const h = (d.count / peak) * 88;
+        if (d.count === 0) return null;
+        const h = (d.count / peak) * 92;
         if (horizontal) {
-          const x = Math.min(96, Math.max(1, t * 100));
+          const x0 = (d.start / max) * 100;
+          const x1 = (d.end / max) * 100;
+          const w = Math.max(0.4, x1 - x0);
           return (
             <rect
               key={d.mid}
-              x={x - 2.2}
+              x={x0}
               y={100 - h}
-              width={4}
+              width={w}
               height={h}
               fill={color}
-              opacity={0.5}
-              rx={0.5}
+              opacity={0.55}
             />
           );
         }
-        const y = 100 - Math.min(96, Math.max(1, t * 100));
+        const y0 = 100 - (d.end / max) * 100;
+        const y1 = 100 - (d.start / max) * 100;
+        const barH = Math.max(0.4, y1 - y0);
         return (
           <rect
             key={d.mid}
             x={0}
-            y={y - 2.2}
+            y={y0}
             width={h}
-            height={4}
+            height={barH}
             fill={color}
-            opacity={0.5}
-            rx={0.5}
+            opacity={0.55}
           />
         );
       })}

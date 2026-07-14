@@ -16,9 +16,9 @@ export function EmptyState({ title, hint, action, className }: EmptyStateProps) 
         className,
       )}
     >
-      <p className="font-display text-xl text-[#f4f4f5]">{title}</p>
+      <p className="font-display text-xl text-[var(--highlight)]">{title}</p>
       {hint ? (
-        <p className="max-w-sm text-sm text-[var(--muted)]">{hint}</p>
+        <p className="max-w-sm text-sm text-[var(--mute)]">{hint}</p>
       ) : null}
       {action}
     </div>

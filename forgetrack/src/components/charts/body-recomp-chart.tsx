@@ -14,7 +14,7 @@ import {
   ComposedChart,
 } from "recharts";
 import { format, parseISO } from "date-fns";
-import { CHART } from "@/lib/charts/theme";
+import { CHART, CHART_TOOLTIP } from "@/lib/charts/theme";
 import { formatNumber } from "@/lib/utils";
 
 type Point = {
@@ -69,7 +69,7 @@ export function BodyRecompChart({ data }: { data: Point[] }) {
 
   if (chart.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-white/10 px-4 py-16 text-center text-sm text-[var(--muted)]">
+      <div className="rounded-xl border border-dashed border-white/10 px-4 py-16 text-center text-sm text-[var(--mute)]">
         Add body logs with weight + body-fat % to unlock recomposition.
       </div>
     );
@@ -78,10 +78,10 @@ export function BodyRecompChart({ data }: { data: Point[] }) {
   return (
     <section className="chart-panel relative overflow-hidden">
       <div className="border-b border-white/6 px-5 pb-4 pt-5 md:px-7">
-        <h2 className="text-[15px] font-semibold uppercase tracking-[0.14em] text-[var(--foreground)] md:text-base">
+        <h2 className="text-[15px] font-semibold uppercase tracking-[0.14em] text-[var(--highlight)] md:text-base">
           Body recomposition
         </h2>
-        <p className="mt-2 text-[13px] text-[var(--muted)]">
+        <p className="mt-2 text-[13px] text-[var(--mute)]">
           {summary && summary.lost > 0.05
             ? `where the ${formatNumber(summary.lost, 1)} kg went.`
             : "lean mass vs fat mass over time."}
@@ -89,21 +89,51 @@ export function BodyRecompChart({ data }: { data: Point[] }) {
       </div>
 
       <div className="relative px-2 pb-4 pt-2 md:px-4">
-        <div className="mb-2 flex items-center gap-4 px-3 text-[11px] uppercase tracking-[0.1em] text-[var(--muted)]">
-          <span className="inline-flex items-center gap-1.5">
-            <span
-              className="inline-block h-2.5 w-2.5 rounded-sm"
-              style={{ background: CHART.lean }}
-            />
-            Lean mass
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span
-              className="inline-block h-2.5 w-2.5 rounded-sm"
-              style={{ background: CHART.fat }}
-            />
-            Fat mass
-          </span>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3 px-3">
+          <div className="flex items-center gap-4 text-[11px] uppercase tracking-[0.1em] text-[var(--mute)]">
+            <span className="inline-flex items-center gap-1.5">
+              <span
+                className="inline-block h-2.5 w-2.5 rounded-sm"
+                style={{ background: CHART.lean }}
+              />
+              Lean mass
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span
+                className="inline-block h-2.5 w-2.5 rounded-sm"
+                style={{ background: CHART.fat }}
+              />
+              Fat mass
+            </span>
+          </div>
+          {summary ? (
+            <div className="flex flex-wrap items-stretch gap-2 text-[12px]">
+              <div className="rounded-lg border border-white/10 bg-black/40 px-3 py-1.5">
+                <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--mute)]">
+                  Start · {format(parseISO(summary.start.date), "MMM d")}
+                </p>
+                <p className="font-medium tabular-nums text-[var(--highlight)]">
+                  {formatNumber(summary.start.weightKg, 1)} kg
+                  <span className="text-[var(--mute)]">
+                    {" "}
+                    · {formatNumber(summary.start.bodyFatPct, 1)}% BF
+                  </span>
+                </p>
+              </div>
+              <div className="rounded-lg border border-[var(--primary)]/25 bg-[var(--primary)]/[0.06] px-3 py-1.5">
+                <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--primary)]">
+                  Now · {format(parseISO(summary.end.date), "MMM d")}
+                </p>
+                <p className="font-medium tabular-nums text-[var(--highlight)]">
+                  {formatNumber(summary.end.weightKg, 1)} kg
+                  <span className="text-[var(--mute)]">
+                    {" "}
+                    · {formatNumber(summary.end.bodyFatPct, 1)}% BF
+                  </span>
+                </p>
+              </div>
+            </div>
+          ) : null}
         </div>
 
         <div className="h-[340px] md:h-[400px]">
@@ -139,11 +169,9 @@ export function BodyRecompChart({ data }: { data: Point[] }) {
                 }}
               />
               <Tooltip
-                contentStyle={{
-                  background: "#16161a",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  borderRadius: 8,
-                }}
+                contentStyle={CHART_TOOLTIP.contentStyle}
+                labelStyle={CHART_TOOLTIP.labelStyle}
+                itemStyle={CHART_TOOLTIP.itemStyle}
                 labelFormatter={(_, payload) =>
                   payload?.[0]?.payload?.label ?? ""
                 }
@@ -160,7 +188,7 @@ export function BodyRecompChart({ data }: { data: Point[] }) {
               />
               <ReferenceLine
                 y={leanFloor}
-                stroke="#e07a7a"
+                stroke={CHART.protein}
                 strokeDasharray="5 4"
                 strokeOpacity={0.55}
               />
@@ -191,7 +219,7 @@ export function BodyRecompChart({ data }: { data: Point[] }) {
                 dataKey="weightKg"
                 stroke="rgba(255,255,255,0.55)"
                 strokeWidth={1.25}
-                dot={{ r: 3.5, fill: "#fff", strokeWidth: 0 }}
+                dot={{ r: 3.5, fill: CHART.title, strokeWidth: 0 }}
                 activeDot={{ r: 5 }}
                 name="weightKg"
                 isAnimationActive
@@ -203,43 +231,27 @@ export function BodyRecompChart({ data }: { data: Point[] }) {
 
         {summary ? (
           <>
-            <Annotation
-              className="left-4 top-12 max-w-[9.5rem] md:left-8 md:top-14"
-              title={format(parseISO(summary.start.date), "MMM d")}
-              lines={[
-                `${formatNumber(summary.start.weightKg, 1)} kg`,
-                `${formatNumber(summary.start.bodyFatPct, 1)}% BF`,
-              ]}
-            />
-            <Annotation
-              className="right-4 top-12 max-w-[9.5rem] md:right-8 md:top-14"
-              title={format(parseISO(summary.end.date), "MMM d")}
-              lines={[
-                `${formatNumber(summary.end.weightKg, 1)} kg`,
-                `~${formatNumber(summary.end.bodyFatPct, 1)}% BF`,
-              ]}
-            />
             {summary.leanDelta < -0.3 ? (
-              <p className="pointer-events-none absolute bottom-[42%] left-1/2 -translate-x-1/2 rounded-md border border-[#e07a7a]/35 bg-black/55 px-2.5 py-1 text-[11px] text-[#f0a8a8] backdrop-blur-sm">
+              <p className="pointer-events-none absolute bottom-[42%] left-1/2 -translate-x-1/2 rounded-md border border-[var(--secondary)]/35 bg-black/55 px-2.5 py-1 text-[11px] text-[var(--secondary)] backdrop-blur-sm">
                 ~{formatNumber(Math.abs(summary.leanDelta), 1)} kg muscle left on
                 the table
               </p>
             ) : null}
             <div className="absolute bottom-8 right-4 max-w-[220px] rounded-lg border border-white/10 bg-black/60 px-3 py-2.5 text-[12px] backdrop-blur-sm md:right-8">
               {summary.fatShare != null ? (
-                <p className="font-medium text-[var(--foreground)]">
+                <p className="font-medium text-[var(--highlight)]">
                   {formatNumber(summary.fatShare, 0)}% of loss was fat
                 </p>
               ) : (
-                <p className="font-medium text-[var(--foreground)]">
+                <p className="font-medium text-[var(--highlight)]">
                   Composition shift
                 </p>
               )}
-              <p className="mt-1 text-[var(--muted)]">
+              <p className="mt-1 text-[var(--mute)]">
                 BF {formatNumber(summary.start.bodyFatPct, 1)}% →{" "}
                 {formatNumber(summary.end.bodyFatPct, 1)}%
               </p>
-              <p className="mt-1 text-[var(--muted)]">
+              <p className="mt-1 text-[var(--mute)]">
                 Lean {summary.leanDelta >= 0 ? "+" : ""}
                 {formatNumber(summary.leanDelta, 1)} kg
                 {summary.leanDelta < -0.3
@@ -251,28 +263,5 @@ export function BodyRecompChart({ data }: { data: Point[] }) {
         ) : null}
       </div>
     </section>
-  );
-}
-
-function Annotation({
-  className,
-  title,
-  lines,
-}: {
-  className: string;
-  title: string;
-  lines: string[];
-}) {
-  return (
-    <div
-      className={`pointer-events-none absolute rounded-md border border-white/12 bg-black/65 px-2.5 py-1.5 text-[11px] backdrop-blur-sm ${className}`}
-    >
-      <p className="font-medium text-[var(--foreground)]">{title}</p>
-      {lines.map((l) => (
-        <p key={l} className="text-[var(--muted)]">
-          {l}
-        </p>
-      ))}
-    </div>
   );
 }

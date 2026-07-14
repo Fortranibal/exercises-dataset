@@ -83,11 +83,11 @@ export default function PhysiquePage() {
   return (
     <div className="space-y-6">
       <header className="animate-rise">
-        <p className="text-xs uppercase tracking-[0.18em] text-[#7a9a82]">
+        <p className="text-xs uppercase tracking-[0.18em] text-[var(--mute)]">
           Form
         </p>
         <h1 className="font-display mt-1 text-4xl">Physique</h1>
-        <p className="mt-2 max-w-xl text-[#9aada0]">
+        <p className="mt-2 max-w-xl text-[var(--mute)]">
           Progress photos with date, weight, and body-fat % — your visual timeline.
         </p>
       </header>
@@ -157,7 +157,7 @@ export default function PhysiquePage() {
           />
         </div>
         {error ? (
-          <p className="md:col-span-2 text-sm text-[#e07a7a]">{error}</p>
+          <p className="md:col-span-2 text-sm text-[var(--secondary)]">{error}</p>
         ) : null}
         <div className="md:col-span-2">
           <button type="submit" className="btn btn-primary" disabled={busy}>
@@ -186,7 +186,7 @@ export default function PhysiquePage() {
               <p className="font-display text-lg">
                 {format(parseISO(p.date), "d MMM yyyy")}
               </p>
-              <p className="text-sm text-[#8a9e90]">
+              <p className="text-sm text-[var(--mute)]">
                 {p.weightKg != null
                   ? `${formatNumber(p.weightKg, 1)} kg`
                   : "— kg"}
@@ -196,14 +196,14 @@ export default function PhysiquePage() {
                   : "— BF"}
               </p>
               {p.notes ? (
-                <p className="mt-1 text-xs text-[#7a9a82]">{p.notes}</p>
+                <p className="mt-1 text-xs text-[var(--mute)]">{p.notes}</p>
               ) : null}
             </div>
           </article>
         ))}
       </section>
       {photos.length === 0 ? (
-        <div className="panel p-8 text-center text-[#8a9e90]">
+        <div className="panel p-8 text-center text-[var(--mute)]">
           No physique photos yet.
         </div>
       ) : null}
