@@ -3,3 +3,11 @@ __pycache__/
 .DS_Store
 .venv/
 *.zip
+forgetrack/node_modules/
+forgetrack/.next/
+forgetrack/data/*.sqlite
+forgetrack/data/*.sqlite-*
+forgetrack/public/uploads/**
+!forgetrack/public/uploads/.gitkeep
+forgetrack/.env
+forgetrack/.env.local
