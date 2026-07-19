@@ -24,7 +24,7 @@ export default async function HomePage() {
       <header className="flex items-center justify-between">
         <div>
           <p className="text-sm text-muted">Welcome back</p>
-          <h1 className="text-2xl font-bold tracking-tight">Forge</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Forge Gym</h1>
         </div>
         <Link
           href="/profile"

@@ -1,11 +1,13 @@
-# Forge — Workout Tracker
+# Forge Gym — Workout Tracker
 
-A Hevy-style workout tracking app built with Next.js. Log workouts, build routines,
+A Hevy-style gym workout tracking app built with Next.js. Log workouts, build routines,
 track progress, analyze training, set goals, and monitor body measurements — with no
 paywalls or limits.
 
 Built on top of the [`exercises-dataset`](../) (1,324 exercises with images, GIFs, and
 multilingual instructions), which lives in the parent directory.
+
+This app is separate from **Forge Meals** (`../forge-meals/`), the meal & physique tracker.
 
 ## Stack
 
@@ -23,7 +25,7 @@ multilingual instructions), which lives in the parent directory.
 ## Setup
 
 ```bash
-cd forge
+cd forge-gym
 npm install
 
 # Generate the Prisma client, create the SQLite DB, and seed all 1,324 exercises

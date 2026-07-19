@@ -14,10 +14,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Forge — Workout Tracker",
-  description: "Track workouts, routines, progress, and body metrics.",
-  applicationName: "Forge",
-  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "Forge" },
+  title: "Forge Gym — Workout Tracker",
+  description: "Track gym workouts, routines, progress, and body metrics.",
+  applicationName: "Forge Gym",
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "Forge Gym" },
 };
 
 export const viewport: Viewport = {

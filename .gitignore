@@ -4,22 +4,22 @@ __pycache__/
 .venv/
 *.zip
 
-# ForgeTrack
-forgetrack/node_modules/
-forgetrack/.next/
-forgetrack/data/*.sqlite
-forgetrack/data/*.sqlite-*
-forgetrack/public/uploads/**
-!forgetrack/public/uploads/.gitkeep
-forgetrack/.env
-forgetrack/.env.local
-forgetrack/tsconfig.tsbuildinfo
+# Forge Meals (meal & physique tracker)
+forge-meals/node_modules/
+forge-meals/.next/
+forge-meals/data/*.sqlite
+forge-meals/data/*.sqlite-*
+forge-meals/public/uploads/**
+!forge-meals/public/uploads/.gitkeep
+forge-meals/.env
+forge-meals/.env.local
+forge-meals/tsconfig.tsbuildinfo
 
-# Forge
-forge/node_modules/
-forge/.next/
-forge/prisma/*.db
-forge/prisma/*.db-*
-forge/.env
-forge/.env.local
-forge/tsconfig.tsbuildinfo
+# Forge Gym (workout tracker)
+forge-gym/node_modules/
+forge-gym/.next/
+forge-gym/prisma/*.db
+forge-gym/prisma/*.db-*
+forge-gym/.env
+forge-gym/.env.local
+forge-gym/tsconfig.tsbuildinfo

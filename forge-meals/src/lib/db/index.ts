@@ -5,7 +5,7 @@ import path from "node:path";
 import * as schema from "./schema";
 
 const dataDir = path.join(process.cwd(), "data");
-const dbPath = path.join(dataDir, "forgetrack.sqlite");
+const dbPath = path.join(dataDir, "forge-meals.sqlite");
 
 function ensureDb() {
   if (!fs.existsSync(dataDir)) {
@@ -108,12 +108,12 @@ function ensureDb() {
 }
 
 const globalForDb = globalThis as unknown as {
-  __forgetrackSqlite?: Database.Database;
+  __forgeMealsSqlite?: Database.Database;
 };
 
-const sqlite = globalForDb.__forgetrackSqlite ?? ensureDb();
+const sqlite = globalForDb.__forgeMealsSqlite ?? ensureDb();
 if (process.env.NODE_ENV !== "production") {
-  globalForDb.__forgetrackSqlite = sqlite;
+  globalForDb.__forgeMealsSqlite = sqlite;
 }
 
 export const db = drizzle(sqlite, { schema });

@@ -16,7 +16,7 @@ export async function GET() {
     ]);
 
   const payload = {
-    app: "Forge",
+    app: "Forge Gym",
     exportedAt: new Date().toISOString(),
     routines,
     workouts,

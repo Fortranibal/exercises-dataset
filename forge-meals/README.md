@@ -1,6 +1,8 @@
-# ForgeTrack
+# Forge Meals — Meal & Physique Tracker
 
-Personal nutrition & physique tracker: log meals with **xAI Grok vision**, review daily/history macros, chart progress (ridge densities, recomposition, calories×protein), track maximum muscular potential, strength, and physique photos.
+Personal meal & physique tracker: log meals with **xAI Grok vision**, review daily/history macros, chart progress (ridge densities, recomposition, calories×protein), track maximum muscular potential, strength, and physique photos.
+
+This app is separate from **Forge Gym** (`../forge-gym/`), the workout tracker.
 
 ## Features
 
@@ -15,7 +17,7 @@ Personal nutrition & physique tracker: log meals with **xAI Grok vision**, revie
 ## Setup
 
 ```bash
-cd forgetrack
+cd forge-meals
 cp .env.example .env.local
 # set XAI_API_KEY=... from https://console.x.ai/
 npm install
@@ -25,7 +27,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-SQLite lives at `data/forgetrack.sqlite`. Uploads at `data/uploads/` (served via `/api/uploads/...`).
+SQLite lives at `data/forge-meals.sqlite`. Uploads at `data/uploads/` (served via `/api/uploads/...`).
 
 ## Stack
 

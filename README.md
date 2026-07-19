@@ -88,14 +88,14 @@ Each exercise entry contains:
 
 ## 🏋️ Apps
 
-This repo also hosts two **separate** personal apps that share a brand family but keep their own code, databases, and release cycles. Do not merge them into one Next.js app.
+This repo hosts two **separate** personal apps. They share a brand family (“Forge”) but keep their own folders, code, databases, and release cycles — do not merge them into one Next.js app.
 
 | App | Folder | Purpose | Run |
 |---|---|---|---|
-| **Forge** | [`forge/`](forge/) | Gym workout tracker — routines, live logger, history, analytics, body metrics | `cd forge && npm install && npm run dev` → [http://localhost:3000](http://localhost:3000) |
-| **ForgeTrack** | [`forgetrack/`](forgetrack/) | Nutrition & physique — meal logging (Grok vision), macros, MMP, strength, photos | `cd forgetrack && npm install && npm run dev` → [http://localhost:3000](http://localhost:3000) |
+| **Forge Gym** | [`forge-gym/`](forge-gym/) | Workout tracker — routines, live logger, history, analytics, body metrics | `cd forge-gym && npm install && npm run dev` → [http://localhost:3000](http://localhost:3000) |
+| **Forge Meals** | [`forge-meals/`](forge-meals/) | Meal & physique tracker — meal logging (Grok vision), macros, MMP, strength, photos | `cd forge-meals && npm install && npm run dev` → [http://localhost:3000](http://localhost:3000) |
 
-When both run at once, use different ports (e.g. Forge on `:3003`, ForgeTrack on `:3002`). Each app has its own README with setup details. Forge depends on this repo’s `data/`, `images/`, and `videos/`; ForgeTrack does not.
+When both run at once, use different ports (e.g. Forge Gym on `:3003`, Forge Meals on `:3002`). Each app has its own README with setup details. Forge Gym depends on this repo’s `data/`, `images/`, and `videos/`; Forge Meals does not.
 
 ---
 
@@ -129,8 +129,8 @@ exercises-dataset/
 │   └── exercises.json       # Full dataset — 1,324 exercise records (JSON array)
 ├── images/                  # Exercise thumbnail images (.jpg) — 1,324 files
 ├── videos/                  # Exercise animation GIFs (.gif) — 1,324 files
-├── forge/                   # Forge — workout tracker (Next.js + Prisma/SQLite)
-├── forgetrack/              # ForgeTrack — nutrition & physique (Next.js + Drizzle/SQLite)
+├── forge-gym/               # Forge Gym — workout tracker (Next.js + Prisma/SQLite)
+├── forge-meals/             # Forge Meals — meal & physique tracker (Next.js + Drizzle/SQLite)
 ├── index.html               # Interactive exercise browser (client-side, no server needed)
 ├── setup.html               # Developer setup guide (DB import + API integration)
 └── README.md
@@ -141,8 +141,8 @@ exercises-dataset/
 - **`data/exercises.json`** — The primary data file. A JSON array of 1,324 exercise objects with all metadata and paths to corresponding media files.
 - **`images/`** — 1,324 thumbnail JPGs named with the exercise ID (e.g. `0001-2gPfomN.jpg`).
 - **`videos/`** — 1,324 GIF animations demonstrating each movement (e.g. `0001-2gPfomN.gif`).
-- **`forge/`** — Forge workout tracker app (see [Apps](#-apps)).
-- **`forgetrack/`** — ForgeTrack nutrition & physique app (see [Apps](#-apps)).
+- **`forge-gym/`** — Forge Gym workout tracker (see [Apps](#-apps)).
+- **`forge-meals/`** — Forge Meals meal & physique tracker (see [Apps](#-apps)).
 - **`index.html`** — Standalone exercise browser. Open directly in any modern browser.
 - **`setup.html`** — Developer guide for DB setup, API integration, and LLM-assisted backend generation.
 

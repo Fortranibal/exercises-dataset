@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Forge — Workout Tracker",
-    short_name: "Forge",
-    description: "Track workouts, routines, progress, records, and body metrics.",
+    name: "Forge Gym — Workout Tracker",
+    short_name: "Forge Gym",
+    description: "Track gym workouts, routines, progress, records, and body metrics.",
     start_url: "/",
     display: "standalone",
     background_color: "#09090b",
