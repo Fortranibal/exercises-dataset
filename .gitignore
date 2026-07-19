@@ -3,6 +3,8 @@ __pycache__/
 .DS_Store
 .venv/
 *.zip
+
+# ForgeTrack
 forgetrack/node_modules/
 forgetrack/.next/
 forgetrack/data/*.sqlite
@@ -11,3 +13,13 @@ forgetrack/public/uploads/**
 !forgetrack/public/uploads/.gitkeep
 forgetrack/.env
 forgetrack/.env.local
+forgetrack/tsconfig.tsbuildinfo
+
+# Forge
+forge/node_modules/
+forge/.next/
+forge/prisma/*.db
+forge/prisma/*.db-*
+forge/.env
+forge/.env.local
+forge/tsconfig.tsbuildinfo

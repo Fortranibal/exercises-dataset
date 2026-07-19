@@ -1,0 +1,155 @@
+// Workout Tracker — Prisma schema (SQLite, single-user)
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// Library + custom exercises. Library rows are seeded from data/exercises.json.
+model Exercise {
+  id               String   @id
+  name             String
+  category         String
+  bodyPart         String
+  equipment        String
+  target           String
+  muscleGroup      String
+  secondaryMuscles String   @default("[]") // JSON-encoded string[]
+  instructions     String   @default("{}") // JSON-encoded { en, es, it, tr }
+  instructionSteps String   @default("{}") // JSON-encoded { en: string[], ... }
+  image            String?
+  gifUrl           String?
+  isCustom         Boolean  @default(false)
+  createdAt        DateTime @default(now())
+
+  routineExercises RoutineExercise[]
+  workoutExercises WorkoutExercise[]
+
+  @@index([bodyPart])
+  @@index([equipment])
+  @@index([target])
+  @@index([name])
+}
+
+/// A reusable workout template (e.g. "Chest Day").
+model Routine {
+  id        String   @id @default(cuid())
+  name      String
+  notes     String?
+  emoji     String?
+  color     String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  exercises RoutineExercise[]
+  workouts  Workout[]
+}
+
+model RoutineExercise {
+  id            String   @id @default(cuid())
+  routineId     String
+  exerciseId    String
+  sortOrder     Int      @default(0)
+  defaultSets   Int      @default(3)
+  defaultReps   Int      @default(10)
+  defaultWeight Float    @default(0)
+  notes         String?
+
+  routine  Routine  @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  exercise Exercise @relation(fields: [exerciseId], references: [id])
+
+  @@index([routineId])
+  @@index([exerciseId])
+}
+
+/// A logged training session (in-progress while completedAt is null).
+model Workout {
+  id          String    @id @default(cuid())
+  routineId   String?
+  name        String
+  notes       String?
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  durationSec Int       @default(0)
+  createdAt   DateTime  @default(now())
+
+  routine   Routine?          @relation(fields: [routineId], references: [id], onDelete: SetNull)
+  exercises WorkoutExercise[]
+
+  @@index([completedAt])
+  @@index([startedAt])
+}
+
+model WorkoutExercise {
+  id         String  @id @default(cuid())
+  workoutId  String
+  exerciseId String
+  sortOrder  Int     @default(0)
+  notes      String?
+
+  workout  Workout  @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  exercise Exercise @relation(fields: [exerciseId], references: [id])
+  sets     WorkoutSet[]
+
+  @@index([workoutId])
+  @@index([exerciseId])
+}
+
+model WorkoutSet {
+  id                String  @id @default(cuid())
+  workoutExerciseId String
+  setNumber         Int
+  reps              Int     @default(0)
+  weight            Float   @default(0)
+  setType           String  @default("normal") // normal | warmup | drop | failure
+  isCompleted       Boolean @default(true)
+  rpe               Float?
+
+  workoutExercise WorkoutExercise @relation(fields: [workoutExerciseId], references: [id], onDelete: Cascade)
+
+  @@index([workoutExerciseId])
+}
+
+model BodyMeasurement {
+  id         String   @id @default(cuid())
+  measuredAt DateTime @default(now())
+  weight     Float?
+  bodyFat    Float?
+  neck       Float?
+  shoulders  Float?
+  chest      Float?
+  upperArm   Float?
+  biceps     Float?
+  forearm    Float?
+  waist      Float?
+  hips       Float?
+  thigh      Float?
+  calf       Float?
+  notes      String?
+  createdAt  DateTime @default(now())
+
+  @@index([measuredAt])
+}
+
+model MeasurementGoal {
+  id        String   @id @default(cuid())
+  metricKey String   @unique // weight | bodyFat | neck | ...
+  target    Float?
+  direction String   @default("maintain") // increase | decrease | maintain
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Goal {
+  id          String   @id @default(cuid())
+  type        String // workouts_per_week | volume_per_week | sets_per_week
+  target      Float
+  period      String   @default("week")
+  muscleGroup String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
