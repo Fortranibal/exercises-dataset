@@ -286,6 +286,13 @@
       margin-left: 12px;
     }
 
+    .generate-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
     /* ── URL Input ───────────────────────────────────── */
     .url-input-row {
       display: flex;
@@ -359,8 +366,10 @@
       gap: 12px;
       margin-bottom: 20px;
       flex-wrap: wrap;
+      min-width: 0;
+      max-width: 100%;
     }
-    .selector-group { display: flex; flex-direction: column; gap: 5px; }
+    .selector-group { display: flex; flex-direction: column; gap: 5px; min-width: 0; max-width: 100%; }
     .selector-label { font-size: 11px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .06em; }
     .selector-tabs { display: flex; gap: 2px; }
     .selector-btn {
@@ -456,11 +465,186 @@
 
     /* ── Responsive ──────────────────────────────────── */
     @media (max-width: 768px) {
-      .page-shell { grid-template-columns: 1fr; }
+      html, body { overflow-x: clip; }
+
+      .site-header {
+        height: auto;
+        min-height: 52px;
+        padding: 10px 12px;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .header-divider,
+      .header-label { display: none; }
+
+      .back-link {
+        margin-left: auto;
+        font-size: 12px;
+        padding: 8px 12px;
+        min-height: 44px;
+      }
+
+      .page-shell {
+        grid-template-columns: 1fr;
+        padding: 0 12px;
+        min-width: 0;
+      }
+
       .page-nav { display: none; }
-      .page-content { padding: 32px 0 60px 0; }
-      .section-body { padding-left: 0; }
-      .section-desc { padding-left: 0; }
+
+      .page-content {
+        padding: 28px 0 56px;
+        max-width: 100%;
+        min-width: 0;
+      }
+
+      .section-body {
+        padding-left: 0;
+        min-width: 0;
+      }
+
+      .section-desc {
+        padding-left: 0;
+        max-width: 100%;
+      }
+
+      .tab-bar {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        margin: 0 -4px;
+        padding-bottom: 2px;
+      }
+
+      .tab-bar::-webkit-scrollbar { display: none; }
+
+      .tab-btn {
+        flex-shrink: 0;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+      }
+
+      .url-input-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+        padding: 10px 12px;
+      }
+
+      .url-input {
+        width: 100%;
+        min-width: 0;
+        font-size: 12px;
+        line-height: 1.4;
+        padding: 4px 0;
+      }
+
+      .endpoint-header {
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 12px 14px;
+      }
+
+      .endpoint-desc {
+        margin-left: 0;
+        width: 100%;
+      }
+
+      .endpoint-path {
+        font-size: 12px;
+        word-break: break-all;
+      }
+
+      .code-block {
+        max-width: 100%;
+      }
+
+      .code-pre {
+        max-width: 100%;
+        font-size: 11px;
+        padding: 14px 12px 14px 14px;
+      }
+
+      .copy-btn {
+        min-height: 36px;
+        min-width: 44px;
+        padding: 6px 12px;
+      }
+
+      .generate-btn {
+        min-height: 44px;
+      }
+
+      .llm-selectors {
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .selector-tabs {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 2px;
+      }
+
+      .selector-tabs::-webkit-scrollbar { display: none; }
+
+      .selector-btn {
+        flex-shrink: 0;
+        min-height: 40px;
+        display: inline-flex;
+        align-items: center;
+      }
+
+      .llm-prompt-box {
+        min-height: 280px;
+        font-size: 11px;
+        padding: 16px;
+      }
+
+      .llm-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+
+      .copy-prompt-btn {
+        justify-content: center;
+        min-height: 44px;
+      }
+
+      .generate-status {
+        margin-left: 0;
+      }
+
+      .llm-hint {
+        text-align: center;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .section-header {
+        align-items: flex-start;
+      }
+
+      .section-title {
+        font-size: 19px;
+      }
+
+      .step {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .site-logo {
+        font-size: 15px;
+      }
+
+      .back-link span.back-text { display: none; }
     }
   </style>
 </head>
@@ -475,7 +659,7 @@
     <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
       <path d="M10 4L6 8l4 4"/>
     </svg>
-    Back to Browse
+    <span class="back-text">Back to Browse</span>
   </a>
 </header>
 
@@ -553,7 +737,7 @@
             <div class="step-body">
               <h3 class="step-title">Import Data</h3>
               <p class="step-desc">Generate a <code>.sql</code> file with all 1,324 INSERT statements. The file is built entirely in your browser — nothing is uploaded to any server.</p>
-              <div style="display:flex;align-items:center;gap:0;">
+              <div class="generate-row">
                 <button class="generate-btn" id="generate-sql-btn">
                   <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
                     <path d="M8 2v8M5 7l3 3 3-3"/><path d="M2 12h12"/>
